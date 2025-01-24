@@ -9,13 +9,14 @@ public sealed class Session
 {
 	public static Session Current { get; internal set; }
 
-	public MovieClip Clip { get; private set; }
+	public MoviePlayer Player { get; private set; }
+
+	internal MovieClip Clip => Player.MovieClip;
 
 	/// <summary>
 	/// If true, we automatically record new keyframes when properties are changed
 	/// </summary>
 	public bool KeyframeRecording { get; set; }
-
 
 	public bool Playing { get; set; }
 	public bool Loop { get; set; } = true;
@@ -26,9 +27,9 @@ public sealed class Session
 	SmoothDeltaFloat SmoothZoom = new SmoothDeltaFloat { Value = 100.0f, Target = 100.0f, SmoothTime = 0.3f };
 	SmoothDeltaFloat SmoothPan = new SmoothDeltaFloat { Value = 0.0f, Target = 0f, SmoothTime = 0.3f };
 
-	internal void SetClip( MovieClip clip )
+	internal void SetPlayer( MoviePlayer player )
 	{
-		Clip = clip;
+		Player = player;
 	}
 
 	public float PixelsToTime( float pixels, bool snap = false )
@@ -80,7 +81,7 @@ public sealed class Session
 
 			OnPointerChanged?.Invoke( CurrentPointer );
 
-			Clip?.ScrubTo( CurrentPointer );
+			Player.Position = CurrentPointer;
 		}
 	}
 

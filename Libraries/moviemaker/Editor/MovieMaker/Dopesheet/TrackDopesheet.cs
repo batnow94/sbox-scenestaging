@@ -200,7 +200,7 @@ public class TrackDopesheet : GraphicsView
 
 		foreach ( var handle in SelectedItems.OfType<DopeHandle>() )
 		{
-			copied.Add( new CopiedHandle( handle.Track.Track.Source.Id, handle.Time, handle.Value ) );
+			copied.Add( new CopiedHandle( handle.Track.Track.Track.Id, handle.Time, handle.Value ) );
 		}
 	}
 
@@ -216,7 +216,7 @@ public class TrackDopesheet : GraphicsView
 		{
 			Log.Info( $"{entry.value}" );
 
-			var track = tracklist.Tracks.FirstOrDefault( x => x.Source.Id == entry.track );
+			var track = tracklist.Tracks.FirstOrDefault( x => x.Track.Id == entry.track );
 			if ( track is null ) continue;
 
 			track.AddKey( entry.time + pastePointer, entry.value );

@@ -70,11 +70,11 @@ public class ToolbarWidget : Widget
 		Paint.DrawRect( LocalRect );
 	}
 
-	internal void UpdatePlayers( List<MovieClipPlayer> playersAvailable )
+	internal void UpdatePlayers( List<MoviePlayer> playersAvailable )
 	{
 		foreach ( var player in playersAvailable )
 		{
-			PlayerDropdown.AddItem( player.GameObject.Name, "movie", () => Editor.Switch( player ), null, player.clip == Session.Clip );
+			PlayerDropdown.AddItem( player.GameObject.Name, "movie", () => Editor.Switch( player ), null, player.MovieClip == Session.Clip );
 		}
 
 		PlayerDropdown.AddItem( "Create New..", "add_photo_alternate", () => Editor.CreateNew() );

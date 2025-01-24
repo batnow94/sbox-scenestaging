@@ -1,5 +1,4 @@
 ﻿using Sandbox.MovieMaker;
-using Sandbox.MovieMaker.Tracks;
 using System.Linq;
 
 namespace Editor.MovieMaker;
@@ -75,7 +74,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 
 	void ScrubToTime( float time )
 	{
-		Session.Clip?.ScrubTo( time );
+		Session.Player.Position = time;
 	}
 
 	private void Load( MovieClip clip )
@@ -94,14 +93,18 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		TrackList.Clear( true );
 		Tracks.Clear();
 
-		foreach ( var track in Session.Clip.Tracks )
+		foreach ( var track in Session.Clip.AllTracks )
 		{
 			AddTrack( track );
 		}
 
 		DopeSheet.UpdateTracks();
 
-		foreach ( var track in Tracks.Where( x => x.Source is PropertyTrack ).GroupBy( x => (x.Source as PropertyTrack).GameObject ) )
+		var groups = Tracks
+			.Where( x => x.Track.Parent is not null )
+			.GroupBy( x => GetRoot( x.Track ) );
+
+		foreach ( var track in groups )
 		{
 			var group = new TrackGroup();
 
@@ -114,12 +117,22 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		}
 	}
 
+	private static MovieTrack GetRoot( MovieTrack track )
+	{
+		while ( track.Parent is { } parent )
+		{
+			track = parent;
+		}
+
+		return track;
+	}
+
 	/// <summary>
 	/// Check tracks hash, rebuild if needed
 	/// </summary>
 	public void RebuildTracksIfNeeded()
 	{
-		if ( Tracks.Count == Session.Clip.Tracks.Count )
+		if ( Tracks.Count == Session.Clip.TrackCount )
 			return;
 
 		RebuildTracks();
@@ -127,7 +140,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 
 	TrackWidget FindTrack( MovieTrack track )
 	{
-		return Tracks.FirstOrDefault( x => x.Source == track );
+		return Tracks.FirstOrDefault( x => x.Track == track );
 	}
 
 	public void AddTrack( MovieTrack track )

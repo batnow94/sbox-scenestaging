@@ -1,55 +1,55 @@
-﻿
-using Sandbox.MovieMaker;
-using Sandbox.MovieMaker.Tracks;
+﻿using Sandbox.MovieMaker;
 
 namespace Editor.MovieMaker;
+
+#nullable enable
 
 
 public class TrackWidget : Widget
 {
-	public TrackListWidget TrackList;
-	public MovieTrack Source;
+	public TrackListWidget TrackList { get; }
+	public MovieTrack Track { get; }
+	internal IMovieProperty? Property { get; }
 
-	public DopesheetTrack Channel { get; set; }
+	public DopesheetTrack? Channel { get; set; }
 
 	RealTimeSince timeSinceInteraction = 1000;
 
-	public TrackWidget( MovieTrack source, TrackListWidget list ) : base()
+	public TrackWidget( MovieTrack track, TrackListWidget list )
 	{
 		TrackList = list;
-		Source = source;
+		Track = track;
 		FocusMode = FocusMode.TabOrClickOrWheel;
 		VerticalSizeMode = SizeMode.CanGrow;
 
 		Layout = Layout.Row();
 		Layout.Margin = new Sandbox.UI.Margin( 4, 4, 32, 4 );
 
-		if ( source is PropertyTrack pt )
+		Property = TrackList.Session.Player.GetProperty( Track );
+
+		// Track might not be mapped to any property in the current scene
+
+		if ( Property is null )
 		{
-			var so = pt.GetSerialized();
-
-			if ( pt.Component.IsValid() )
-			{
-				var ctrl = ControlWidget.Create( so.GetProperty( nameof( PropertyTrack.Component ) ) );
-				if ( ctrl.IsValid() )
-				{
-					ctrl.MaximumWidth = 300;
-					Layout.Add( ctrl );
-				}
-			}
-			else
-			{
-				var ctrl = ControlWidget.Create( so.GetProperty( nameof( PropertyTrack.GameObject ) ) );
-				if ( ctrl.IsValid() )
-				{
-					ctrl.MaximumWidth = 300;
-					Layout.Add( ctrl );
-				}
-			}
-
-			Layout.AddSpacingCell( 16 );
-			Layout.Add( new Label( pt.PropertyName ) );
+			return;
 		}
+
+		if ( Property is ISceneReferenceMovieProperty )
+		{
+			// Add control to retarget a scene reference (Component / GameObject)
+
+			var so = Property.GetSerialized();
+			var ctrl = ControlWidget.Create( so.GetProperty( nameof( IMovieProperty.Value ) ) );
+
+			if ( ctrl.IsValid() )
+			{
+				ctrl.MaximumWidth = 300;
+				Layout.Add( ctrl );
+			}
+		}
+
+		Layout.AddSpacingCell( 16 );
+		Layout.Add( new Label( Property.PropertyName ) );
 	}
 
 	public override void OnDestroyed()
@@ -89,6 +89,8 @@ public class TrackWidget : Widget
 	{
 		base.DoLayout();
 
+		if ( Channel is null ) return;
+
 		var pos = Channel.GraphicsView.FromScreen( ScreenPosition );
 
 		Channel.DoLayout( new Rect( pos, Size ) );
@@ -104,6 +106,8 @@ public class TrackWidget : Widget
 	/// </summary>
 	public void Write()
 	{
+		if ( Channel is null ) return;
+
 		Channel.Write();
 	}
 
@@ -123,7 +127,7 @@ public class TrackWidget : Widget
 
 	void RemoveTrack()
 	{
-		TrackList.Session.Clip.RemoveTrack( Source );
+		Track.Remove();
 		TrackList.RebuildTracksIfNeeded();
 	}
 
@@ -133,4 +137,3 @@ public class TrackWidget : Widget
 		Update();
 	}
 }
-

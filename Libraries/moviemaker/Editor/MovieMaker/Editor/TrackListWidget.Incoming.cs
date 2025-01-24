@@ -14,15 +14,9 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 		if ( propertyName == "LocalScale" || propertyName == "LocalRotation" || propertyName == "LocalPosition" )
 		{
 			// make sure the track exists for this property
-			var targetTrack = Session.Clip.FindTrack( go, propertyName );
-
-			if ( targetTrack is null )
-			{
-				if ( !Session.KeyframeRecording ) return;
-
-				targetTrack = Session.Clip.FindOrCreateTrack( go, propertyName );
-				OnTrackCreated( targetTrack );
-			}
+			var targetTrack = Session.KeyframeRecording
+				? Session.Player.GetOrCreateTrack( go, propertyName )
+				: Session.Player.GetTrack( go, propertyName );
 
 			// make sure the track widget exists for this track
 			RebuildTracksIfNeeded();
@@ -41,15 +35,9 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 	{
 		propertyName = propertyName.Split( '.' ).First();
 
-		var targetTrack = Session.Clip.FindTrack( cmp, propertyName );
-
-		if ( targetTrack is null )
-		{
-			if ( !Session.KeyframeRecording ) return;
-
-			targetTrack = Session.Clip.FindOrCreateTrack( cmp, propertyName );
-			OnTrackCreated( targetTrack );
-		}
+		var targetTrack = Session.KeyframeRecording
+			? Session.Player.GetOrCreateTrack( cmp, propertyName )
+			: Session.Player.GetTrack( cmp, propertyName );
 
 		// make sure the track widget exists for this track
 		RebuildTracksIfNeeded();
@@ -61,12 +49,6 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 
 		ScrollArea.MakeVisible( trackwidget );
 		trackwidget.NoteInteraction();
-	}
-
-
-	void OnTrackCreated( MovieTrack track )
-	{
-		//EditorUtility.PlayRawSound( "sounds/editor/create.wav" );
 	}
 }
 

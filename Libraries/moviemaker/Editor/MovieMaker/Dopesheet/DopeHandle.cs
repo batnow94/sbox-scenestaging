@@ -56,8 +56,6 @@ public class DopeHandle : GraphicsItem
 		}
 	}
 
-
-
 	protected override void OnPaint()
 	{
 		var c = Extensions.PaintSelectColor( HandleColor.WithAlpha( 0.5f ), HandleColor, TrackDopesheet.Colors.HandleSelected );

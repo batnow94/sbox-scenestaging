@@ -1,43 +1,26 @@
-﻿
-using Sandbox.Diagnostics;
-using Sandbox.MovieMaker.Tracks;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Editor.MovieMaker;
 
+#nullable enable
+
 public class DopesheetTrack : GraphicsItem
 {
-	public TrackWidget Track;
+	public TrackWidget Track { get; }
+	public KeyframeCurve? Curve { get; private set; }
+
 	IEnumerable<DopeHandle> Handles => Children.OfType<DopeHandle>();
 
 	public Color HandleColor { get; private set; }
 
-	public DopesheetTrack( TrackWidget track ) : base()
+	public DopesheetTrack( TrackWidget track )
 	{
 		Track = track;
 		HoverEvents = true;
 
 		HandleColor = Theme.Grey;
 
-		if ( Track.Source is PropertyVector3Track )
-		{
-			HandleColor = Theme.Blue;
-		}
-
-		if ( Track.Source is PropertyRotationTrack )
-		{
-			HandleColor = Theme.Green;
-		}
-
-		if ( Track.Source is PropertyColorTrack )
-		{
-			HandleColor = Theme.Pink;
-		}
-
-		if ( Track.Source is PropertyFloatTrack )
-		{
-			HandleColor = Theme.Yellow;
-		}
+		// TODO: handle color from track type
 	}
 
 	protected override void OnPaint()
@@ -68,9 +51,9 @@ public class DopesheetTrack : GraphicsItem
 
 	internal void OnSelected()
 	{
-		if ( Track.Source is PropertyTrack pt )
+		if ( Track.Property?.GetTargetGameObject() is { } gameObject )
 		{
-			SceneEditorSession.Active.Selection.Set( pt.GameObject );
+			SceneEditorSession.Active.Selection.Set( gameObject );
 		}
 	}
 
@@ -86,14 +69,7 @@ public class DopesheetTrack : GraphicsItem
 
 	internal void AddKey( float time )
 	{
-		object value = null;
-
-		if ( Track.Source is PropertyTrack pt )
-		{
-			value = pt.ReadCurrentValue();
-		}
-
-		AddKey( time, value );
+		AddKey( time, Track.Property?.Value );
 	}
 
 	internal void AddKey( float currentPointer, object value )
@@ -123,15 +99,17 @@ public class DopesheetTrack : GraphicsItem
 			h.Destroy();
 		}
 
-		if ( Track.Source is PropertyTrack provider )
+		if ( Track.Property?.CanHaveKeyframes() ?? false )
 		{
-			var frames = provider.ReadFrames();
-			Assert.NotNull( frames, "Frames returned null!" );
-			for ( int i = 0; i < frames.Length; i++ )
+			Curve = Track.Track.ReadKeyframes() ?? KeyframeCurve.Create( Track.Track.PropertyType );
+
+			foreach ( var keyframe in Curve )
 			{
-				var h = new DopeHandle( this );
-				h.Time = frames[i].time;
-				h.Value = frames[i].value;
+				_ = new DopeHandle( this )
+				{
+					Time = keyframe.Time,
+					Value = keyframe.Value
+				};
 			}
 		}
 
@@ -143,10 +121,8 @@ public class DopesheetTrack : GraphicsItem
 	/// </summary>
 	public void Write()
 	{
-		if ( Track.Source is not PropertyTrack pt )
-			return;
+		if ( Curve is null ) return;
 
-		pt.WriteFrames( Handles.OrderBy( x => x.Time ).Select( x => new PropertyTrack.PropertyKeyframe { time = x.Time, value = x.Value } ).ToArray() );
-
+		Track.Track.WriteKeyframes( Curve );
 	}
 }

@@ -26,14 +26,19 @@ public class MovieEditor : Widget
 		}
 	}
 
-	public void Initialize( MovieClipPlayer player )
+	public void Initialize( MoviePlayer player )
 	{
 		Layout.Clear( true );
 
-		player.clip ??= new MovieClip();
+		if ( player.MovieClip is null )
+		{
+			// Default to an embedded clip, rather than a resource file
+
+			player.EmbeddedClip ??= new MovieClip();
+		}
 
 		Session = new Session();
-		Session.SetClip( player.clip );
+		Session.SetPlayer( player );
 		Session.Current = Session;
 
 		Layout?.Clear( true );
@@ -120,7 +125,7 @@ public class MovieEditor : Widget
 
 	int contextHash;
 
-	List<MovieClipPlayer> playersAvailable = new();
+	List<MoviePlayer> playersAvailable = new();
 
 	/// <summary>
 	/// Look for any clips we can edit. If the clip we're editing has gone - stop editing it.
@@ -128,7 +133,10 @@ public class MovieEditor : Widget
 	void UpdateEditorContext()
 	{
 		HashCode hash = new HashCode();
-		var allplayers = SceneEditorSession.Active.Scene.GetAllComponents<MovieClipPlayer>();
+
+		if ( SceneEditorSession.Active?.Scene is not { } scene ) return;
+
+		var allplayers = scene.GetAllComponents<MoviePlayer>();
 		foreach ( var player in allplayers )
 		{
 			hash.Add( player );
@@ -146,7 +154,7 @@ public class MovieEditor : Widget
 		if ( Session is not null )
 		{
 			// Whatever we were editing doesn't exist anymore!
-			if ( !playersAvailable.Any( x => x.clip == Session.Clip ) )
+			if ( playersAvailable.All( x => x.MovieClip != Session.Clip ) )
 			{
 				CloseSession();
 			}
@@ -162,7 +170,7 @@ public class MovieEditor : Widget
 		Toolbar.UpdatePlayers( playersAvailable );
 	}
 
-	public void Switch( MovieClipPlayer player )
+	public void Switch( MoviePlayer player )
 	{
 		Initialize( player );
 		contextHash = default;
@@ -173,7 +181,7 @@ public class MovieEditor : Widget
 		using ( SceneEditorSession.Active.Scene.Push() )
 		{
 			var go = new GameObject( true, "New Timeline Player" );
-			go.Components.Create<MovieClipPlayer>();
+			go.Components.Create<MoviePlayer>();
 
 			SceneEditorSession.Active.Selection.Set( go );
 		}

@@ -1,0 +1,187 @@
+﻿using System;
+
+namespace Sandbox.MovieMaker;
+
+#nullable enable
+
+/// <summary>
+/// A property somewhere in a scene that is being controlled by a <see cref="MovieTrack"/>.
+/// </summary>
+public interface IMovieProperty
+{
+	string PropertyName { get; }
+	Type PropertyType { get; }
+
+	object? Value { get; set; }
+}
+
+/// <summary>
+/// Typed <see cref="IMovieProperty"/>.
+/// </summary>
+/// <typeparam name="T">Value type stored in the property.</typeparam>
+internal interface IMovieProperty<T> : IMovieProperty
+{
+	new T Value { get; set; }
+}
+
+/// <summary>
+/// A property referencing a <see cref="GameObject"/> or <see cref="Component"/> in the scene.
+/// </summary>
+public interface ISceneReferenceMovieProperty : IMovieProperty
+{
+	GameObject GameObject { get; }
+	Component? Component { get; }
+}
+
+/// <summary>
+/// Movie property that represents a member inside another property.
+/// </summary>
+public interface IMemberMovieProperty : IMovieProperty
+{
+	/// <summary>
+	/// Property that this member belongs to.
+	/// </summary>
+	IMovieProperty TargetProperty { get; }
+}
+
+internal static class MovieProperty
+{
+	public static ISceneReferenceMovieProperty FromGameObject( GameObject go )
+	{
+		return new GameObjectMovieProperty( go );
+	}
+
+	public static ISceneReferenceMovieProperty FromComponent( Component comp )
+	{
+		var propType = TypeLibrary.GetType( typeof(ComponentMovieProperty<>) ).MakeGenericType( [comp.GetType()] );
+
+		return TypeLibrary.Create<ISceneReferenceMovieProperty>( propType, [comp] );
+	}
+
+	public static IMemberMovieProperty FromMember( IMovieProperty target, string memberName )
+	{
+		var targetType = TypeLibrary.GetType( target.PropertyType );
+		var member = targetType.Members
+			.Where( x => x is FieldDescription or PropertyDescription )
+			.FirstOrDefault( m => m.Name == memberName );
+
+		var memberType = member switch
+		{
+			PropertyDescription propDesc => propDesc.PropertyType,
+			FieldDescription fieldDesc => fieldDesc.FieldType,
+			_ => throw new ArgumentException(
+				$"Unable to find property or field '{memberName}' in type '{targetType.Name}'.", nameof(memberName) )
+		};
+
+		var propType = TypeLibrary.GetType( typeof(MemberMovieProperty<>) ).MakeGenericType( [memberType] );
+
+		return TypeLibrary.Create<IMemberMovieProperty>( propType, [target, member] );
+	}
+}
+
+/// <summary>
+/// Movie property that references a <see cref="GameObject"/> in a scene.
+/// </summary>
+file sealed class GameObjectMovieProperty : IMovieProperty<GameObject>, ISceneReferenceMovieProperty
+{
+	public string PropertyName => Value.Name;
+	public Type PropertyType => typeof(GameObject);
+
+	public GameObject Value { get; set; }
+
+	public GameObjectMovieProperty( GameObject value )
+	{
+		Value = value;
+	}
+
+	object? IMovieProperty.Value
+	{
+		get => Value;
+		set => Value = (GameObject)value!;
+	}
+
+	GameObject ISceneReferenceMovieProperty.GameObject => Value;
+	Component? ISceneReferenceMovieProperty.Component => null;
+}
+
+/// <summary>
+/// Movie property that references a <see cref="Component"/> in a scene.
+/// </summary>
+/// <typeparam name="T">Component type stored in the property.</typeparam>
+file sealed class ComponentMovieProperty<T> : IMovieProperty<T>, ISceneReferenceMovieProperty
+	where T : Component
+{
+	public string PropertyName => typeof(T).Name;
+	public Type PropertyType => typeof(T);
+
+	public T Value { get; set; }
+
+	public ComponentMovieProperty( T value )
+	{
+		Value = value;
+	}
+
+	object? IMovieProperty.Value
+	{
+		get => Value;
+		set => Value = (T)value!;
+	}
+
+	GameObject ISceneReferenceMovieProperty.GameObject => Value.GameObject;
+	Component? ISceneReferenceMovieProperty.Component => Value;
+}
+
+/// <summary>
+/// Movie property that references a field or property contained in another <see cref="IMovieProperty"/>.
+/// For example, a property in a <see cref="Component"/>.
+/// </summary>
+/// <typeparam name="T">Value type stored in the property.</typeparam>
+file sealed class MemberMovieProperty<T> : IMovieProperty<T>, IMemberMovieProperty
+{
+	public IMovieProperty TargetProperty { get; }
+	public MemberDescription Member { get; }
+
+	public T Value
+	{
+		// TODO: we can avoid boxing / reflection here when we're in engine code using System.Linq.Expressions
+
+		get => Member switch
+		{
+			PropertyDescription propDesc => (T)propDesc.GetValue( TargetProperty.Value ),
+			FieldDescription fieldDesc => (T)fieldDesc.GetValue( TargetProperty.Value ),
+			_ => throw new NotImplementedException()
+		};
+
+		set
+		{
+			switch ( Member )
+			{
+				case PropertyDescription propDesc:
+					propDesc.SetValue( TargetProperty.Value, value );
+					return;
+
+				case FieldDescription fieldDesc:
+					fieldDesc.SetValue( TargetProperty.Value, value );
+					return;
+
+				default:
+					throw new NotImplementedException();
+			}
+		}
+	}
+
+	public MemberMovieProperty( IMovieProperty targetProperty, MemberDescription member )
+	{
+		TargetProperty = targetProperty;
+		Member = member;
+	}
+
+	string IMovieProperty.PropertyName => Member.Name;
+	Type IMovieProperty.PropertyType => typeof(T);
+
+	object? IMovieProperty.Value
+	{
+		get => Value;
+		set => Value = (T)value!;
+	}
+}
