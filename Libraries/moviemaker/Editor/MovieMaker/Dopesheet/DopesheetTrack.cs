@@ -13,6 +13,14 @@ public class DopesheetTrack : GraphicsItem
 
 	public Color HandleColor { get; private set; }
 
+	private static Dictionary<Type, Color> HandleColors { get; } = new()
+	{
+		{ typeof(Vector3), Theme.Blue },
+		{ typeof(Rotation), Theme.Green },
+		{ typeof(Color), Theme.Pink },
+		{ typeof(float), Theme.Yellow },
+	};
+
 	public DopesheetTrack( TrackWidget track )
 	{
 		Track = track;
@@ -20,7 +28,10 @@ public class DopesheetTrack : GraphicsItem
 
 		HandleColor = Theme.Grey;
 
-		// TODO: handle color from track type
+		if ( HandleColors.TryGetValue( track.Track.PropertyType, out var color ) )
+		{
+			HandleColor = color;
+		}
 	}
 
 	protected override void OnPaint()

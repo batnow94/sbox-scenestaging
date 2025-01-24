@@ -62,7 +62,7 @@ public partial class KeyframeCurve<T> : KeyframeCurve, IEnumerable<Keyframe<T>>
 	public KeyframeCurve()
 	{
 		Interpolation = _interpolator is not null
-			? KeyframeInterpolation.Linear
+			? KeyframeInterpolation.QuadraticInOut
 			: KeyframeInterpolation.None;
 	}
 

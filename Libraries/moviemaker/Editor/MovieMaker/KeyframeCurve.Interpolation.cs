@@ -1,9 +1,12 @@
-﻿namespace Editor.MovieMaker;
+﻿using Sandbox.Utility;
+
+namespace Editor.MovieMaker;
 
 public enum KeyframeInterpolation
 {
 	None,
-	Linear
+	Linear,
+	QuadraticInOut
 }
 
 partial class KeyframeCurve<T>
@@ -53,6 +56,7 @@ public static partial class KeyframeExtensions
 	public static float Apply( this KeyframeInterpolation interpolation, float t ) => interpolation switch
 	{
 		KeyframeInterpolation.Linear => t,
+		KeyframeInterpolation.QuadraticInOut => Easing.QuadraticInOut( t ),
 		_ => 0f
 	};
 }

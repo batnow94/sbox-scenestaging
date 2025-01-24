@@ -19,7 +19,7 @@ public sealed partial class MoviePlayer : Component
 		set
 		{
 			_embeddedClip = value;
-			_referencedFile = null;
+			_referencedFile = value is not null ? null : _referencedFile;
 
 			UpdatePosition();
 		}
@@ -32,7 +32,7 @@ public sealed partial class MoviePlayer : Component
 		set
 		{
 			_referencedFile = value;
-			_embeddedClip = null;
+			_embeddedClip = value is not null ? null : _embeddedClip;
 
 			UpdatePosition();
 		}

@@ -17,6 +17,7 @@ partial class MoviePlayer
 	internal IReadOnlyList<MappingModel> Mapping
 	{
 		get => _sceneRefMap
+			.Where( x => MovieClip is null || MovieClip.GetTrack( x.Key ) is not null )
 			.Select( x => x.Value.Component is { } comp
 				? new MappingModel( x.Key, Component: comp.Id )
 				: new MappingModel( x.Key, x.Value.GameObject.Id ) )
