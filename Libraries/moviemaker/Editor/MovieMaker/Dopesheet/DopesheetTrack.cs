@@ -69,7 +69,7 @@ public class DopesheetTrack : GraphicsItem
 
 	internal void AddKey( float time )
 	{
-		AddKey( time, Track.Property?.Value );
+		AddKey( time, Track.Property!.Value );
 	}
 
 	internal void AddKey( float currentPointer, object value )
@@ -122,6 +122,13 @@ public class DopesheetTrack : GraphicsItem
 	public void Write()
 	{
 		if ( Curve is null ) return;
+
+		Curve.Clear();
+
+		foreach ( var handle in Handles )
+		{
+			Curve.SetKeyframe( handle.Time, handle.Value );
+		}
 
 		Track.Track.WriteKeyframes( Curve );
 	}

@@ -53,9 +53,7 @@ internal static class MovieProperty
 
 	public static ISceneReferenceMovieProperty FromComponent( Component comp )
 	{
-		var propType = TypeLibrary.GetType( typeof(ComponentMovieProperty<>) ).MakeGenericType( [comp.GetType()] );
-
-		return TypeLibrary.Create<ISceneReferenceMovieProperty>( propType, [comp] );
+		return new ComponentMovieProperty( comp );
 	}
 
 	public static IMemberMovieProperty FromMember( IMovieProperty target, string memberName )
@@ -108,15 +106,26 @@ file sealed class GameObjectMovieProperty : IMovieProperty<GameObject>, ISceneRe
 /// Movie property that references a <see cref="Component"/> in a scene.
 /// </summary>
 /// <typeparam name="T">Component type stored in the property.</typeparam>
-file sealed class ComponentMovieProperty<T> : IMovieProperty<T>, ISceneReferenceMovieProperty
-	where T : Component
+file sealed class ComponentMovieProperty : IMovieProperty<Component>, ISceneReferenceMovieProperty
 {
-	public string PropertyName => typeof(T).Name;
-	public Type PropertyType => typeof(T);
+	private Component _value;
 
-	public T Value { get; set; }
+	public string PropertyName { get; private set; }
+	public Type PropertyType { get; private set; }
 
-	public ComponentMovieProperty( T value )
+	public Component Value
+	{
+		get => _value;
+		set
+		{
+			_value = value;
+
+			PropertyType = value.GetType();
+			PropertyName = TypeLibrary.GetType( PropertyType ).Title;
+		}
+	}
+
+	public ComponentMovieProperty( Component value )
 	{
 		Value = value;
 	}
@@ -124,7 +133,7 @@ file sealed class ComponentMovieProperty<T> : IMovieProperty<T>, ISceneReference
 	object? IMovieProperty.Value
 	{
 		get => Value;
-		set => Value = (T)value!;
+		set => Value = (Component)value!;
 	}
 
 	GameObject ISceneReferenceMovieProperty.GameObject => Value.GameObject;

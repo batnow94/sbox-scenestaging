@@ -29,7 +29,7 @@ public sealed partial class MovieTrack
 	public MovieClip Clip => _clip ?? throw new Exception( $"{nameof(MovieTrack)} has been removed." );
 
 	/// <summary>
-	/// ID for referencing this track, should be unique.
+	/// ID for referencing this track. Must be unique in this <see cref="MovieClip"/>.
 	/// </summary>
 	public Guid Id { get; }
 

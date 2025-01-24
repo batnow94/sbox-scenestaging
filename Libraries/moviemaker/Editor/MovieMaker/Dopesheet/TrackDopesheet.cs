@@ -94,8 +94,9 @@ public class TrackDopesheet : GraphicsView
 			if ( track.Channel is null )
 			{
 				track.Channel = new DopesheetTrack( track );
-				track.Channel.Read();
 				Add( track.Channel );
+
+				track.Channel.Read();
 			}
 
 			track.Channel.PositionHandles();

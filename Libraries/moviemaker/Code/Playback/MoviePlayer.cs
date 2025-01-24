@@ -11,7 +11,6 @@ public sealed partial class MoviePlayer : Component
 	private MovieFile? _referencedFile;
 
 	private float _position;
-	private bool _isReady;
 
 	[Property, Group( "Source" ), Hide]
 	public MovieClip? EmbeddedClip
@@ -86,20 +85,52 @@ public sealed partial class MoviePlayer : Component
 
 		// We allow negative positions so we can have a delayed start
 
-		if ( _isReady && _position >= 0f )
+		if ( _sceneRefMap.Count > 0 && _position >= 0f )
 		{
 			ApplyFrame( _position );
+		}
+	}
+
+	internal void ApplyFrame( float time )
+	{
+		if ( MovieClip is null ) return;
+
+		foreach ( var track in MovieClip.RootTracks )
+		{
+			ApplyFrame( track, time );
+		}
+	}
+
+	internal void ApplyFrame( MovieTrack track, float time )
+	{
+		// TODO: this is a slow placeholder implementation, we can avoid boxing / reflection when we're in the engine
+
+		if ( GetOrAutoResolveProperty( track ) is { } property && track.GetBlock( time ) is { } block )
+		{
+			switch ( block.Data )
+			{
+				case IConstantData constantData:
+					property.Value = constantData.Value;
+					break;
+
+				case ISamplesData samplesData:
+					property.Value = samplesData.GetValue( time - block.StartTime );
+					break;
+
+				case ActionData:
+					throw new NotImplementedException();
+			}
+		}
+
+		foreach ( var child in track.Children )
+		{
+			ApplyFrame( child, time );
 		}
 	}
 
 	protected override void OnEnabled()
 	{
 		UpdatePosition();
-	}
-
-	protected override void OnStart()
-	{
-		_isReady = true;
 	}
 
 	protected override void OnUpdate()

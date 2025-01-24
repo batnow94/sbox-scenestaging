@@ -18,6 +18,9 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 				? Session.Player.GetOrCreateTrack( go, propertyName )
 				: Session.Player.GetTrack( go, propertyName );
 
+			if ( targetTrack is null && !Session.KeyframeRecording )
+				return;
+
 			// make sure the track widget exists for this track
 			RebuildTracksIfNeeded();
 
@@ -38,6 +41,9 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 		var targetTrack = Session.KeyframeRecording
 			? Session.Player.GetOrCreateTrack( cmp, propertyName )
 			: Session.Player.GetTrack( cmp, propertyName );
+
+		if ( targetTrack is null && !Session.KeyframeRecording )
+			return;
 
 		// make sure the track widget exists for this track
 		RebuildTracksIfNeeded();

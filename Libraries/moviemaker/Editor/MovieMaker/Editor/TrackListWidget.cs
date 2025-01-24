@@ -101,14 +101,13 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		DopeSheet.UpdateTracks();
 
 		var groups = Tracks
-			.Where( x => x.Track.Parent is not null )
 			.GroupBy( x => GetRoot( x.Track ) );
 
-		foreach ( var track in groups )
+		foreach ( var groupTracks in groups )
 		{
 			var group = new TrackGroup();
 
-			foreach ( var tr in track )
+			foreach ( var tr in groupTracks )
 			{
 				group.Content.Add( tr );
 			}

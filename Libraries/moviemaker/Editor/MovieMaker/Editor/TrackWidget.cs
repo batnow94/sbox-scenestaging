@@ -89,8 +89,6 @@ public class TrackWidget : Widget
 	{
 		base.DoLayout();
 
-		if ( Channel is null ) return;
-
 		var pos = Channel.GraphicsView.FromScreen( ScreenPosition );
 
 		Channel.DoLayout( new Rect( pos, Size ) );

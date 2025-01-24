@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace Editor.MovieMaker;
 
 [JsonConverter( typeof(KeyframeCurveConverter) )]
-partial class KeyframeCurve
+partial class KeyframeCurve<T>
 {
 
 }

@@ -25,7 +25,7 @@ public sealed partial class MovieClip
 	/// <summary>
 	/// All tracks in this clip, including children of other tracks.
 	/// </summary>
-	public IEnumerable<MovieTrack> AllTracks => _trackDict.Values.OrderBy( x => x.Id );
+	public IEnumerable<MovieTrack> AllTracks => _rootTracks.SelectMany( EnumerateAllDescendants );
 
 	/// <summary>
 	/// Total number of tracks in the clip, including children of other tracks.
@@ -106,6 +106,19 @@ public sealed partial class MovieClip
 		else
 		{
 			track.Parent.RemoveChildInternal( track );
+		}
+	}
+
+	private static IEnumerable<MovieTrack> EnumerateAllDescendants( MovieTrack track )
+	{
+		yield return track;
+
+		foreach ( var child in track.Children )
+		{
+			foreach ( var descendant in EnumerateAllDescendants( child ) )
+			{
+				yield return descendant;
+			}
 		}
 	}
 }

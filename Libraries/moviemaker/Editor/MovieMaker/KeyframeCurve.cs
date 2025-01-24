@@ -31,10 +31,14 @@ public abstract partial class KeyframeCurve : IEnumerable<IKeyframe>
 
 	public static KeyframeCurve Create( Type valueType )
 	{
-		var typeDesc = TypeLibrary.GetType( typeof(KeyframeCurve<>) ).MakeGenericType( [valueType] );
+		var typeDesc = EditorTypeLibrary.GetType( typeof(KeyframeCurve<>) ).MakeGenericType( [valueType] );
 
-		return TypeLibrary.Create<KeyframeCurve>( typeDesc );
+		return EditorTypeLibrary.Create<KeyframeCurve>( typeDesc );
 	}
+
+	public abstract void Clear();
+
+	public abstract void SetKeyframe( float time, object? value, KeyframeInterpolation? interpolation = null );
 
 	protected abstract IEnumerator<IKeyframe> OnGetEnumerator();
 
@@ -68,6 +72,9 @@ public partial class KeyframeCurve<T> : KeyframeCurve, IEnumerable<Keyframe<T>>
 		set => _keyframes.Values[index] = value;
 	}
 
+	public override void SetKeyframe( float time, object? value, KeyframeInterpolation? interpolation = null ) =>
+		SetKeyframe( new Keyframe<T>( time, (T)value!, interpolation ) );
+
 	public void SetKeyframe( float time, T value, KeyframeInterpolation? interpolation = null ) =>
 		SetKeyframe( new Keyframe<T>( time, value, interpolation ) );
 
@@ -84,6 +91,11 @@ public partial class KeyframeCurve<T> : KeyframeCurve, IEnumerable<Keyframe<T>>
 	public void RemoveKeyframe( float time )
 	{
 		_keyframes.Remove( time );
+	}
+
+	public override void Clear()
+	{
+		_keyframes.Clear();
 	}
 
 	protected override IEnumerator<IKeyframe> OnGetEnumerator()

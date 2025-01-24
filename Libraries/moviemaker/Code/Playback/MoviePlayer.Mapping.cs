@@ -59,43 +59,6 @@ partial class MoviePlayer
 		return _memberMap[track.Id] = MovieProperty.FromMember( parentProperty, track.Name );
 	}
 
-	internal void ApplyFrame( float time )
-	{
-		if ( MovieClip is null ) return;
-
-		foreach ( var track in MovieClip.RootTracks )
-		{
-			ApplyFrame( track, time );
-		}
-	}
-
-	internal void ApplyFrame( MovieTrack track, float time )
-	{
-		// TODO: this is a slow placeholder implementation, we can avoid boxing / reflection when we're in the engine
-
-		if ( GetOrAutoResolveProperty( track ) is { } property && track.GetBlock( time ) is { } block )
-		{
-			switch ( block.Data )
-			{
-				case IConstantData constantData:
-					property.Value = constantData.Value;
-					break;
-
-				case ISamplesData samplesData:
-					property.Value = samplesData.GetValue( time - block.StartTime );
-					break;
-
-				case ActionData:
-					throw new NotImplementedException();
-			}
-		}
-
-		foreach ( var child in track.Children )
-		{
-			ApplyFrame( child, time );
-		}
-	}
-
 	public MovieTrack? GetTrack( GameObject go )
 	{
 		if ( MovieClip is null ) return null;

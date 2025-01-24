@@ -1,5 +1,6 @@
 ﻿using Sandbox.MovieMaker;
 using System.Reflection;
+using Sandbox.Diagnostics;
 
 namespace Editor.MovieMaker;
 
@@ -7,7 +8,7 @@ namespace Editor.MovieMaker;
 
 partial class KeyframeExtensions
 {
-	public const float DefaultSampleRate = 60f;
+	public const float DefaultSampleRate = 30f;
 
 	public static bool CanHaveKeyframes( this IMovieProperty property ) => property is IMemberMovieProperty;
 
@@ -15,7 +16,10 @@ partial class KeyframeExtensions
 
 	public static void WriteKeyframes( this MovieTrack track, KeyframeCurve keyframes, float sampleRate = DefaultSampleRate )
 	{
-		typeof( EditorDataExtensions ).GetMethod( nameof( WriteKeyframesInternal ), BindingFlags.NonPublic | BindingFlags.Static )!
+		Assert.AreEqual( track.PropertyType, keyframes.ValueType );
+
+		typeof( KeyframeExtensions ).GetMethod( nameof( WriteKeyframesInternal ), BindingFlags.NonPublic | BindingFlags.Static )!
+			.MakeGenericMethod( track.PropertyType )
 			.Invoke( null, [track, keyframes, sampleRate] );
 	}
 
