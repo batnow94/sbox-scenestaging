@@ -105,7 +105,7 @@ public sealed partial class MoviePlayer : Component
 	{
 		// TODO: this is a slow placeholder implementation, we can avoid boxing / reflection when we're in the engine
 
-		if ( GetOrAutoResolveProperty( track ) is { } property && track.GetBlock( time ) is { } block )
+		if ( GetOrAutoResolveProperty( track ) is { IsBound: true } property && track.GetBlock( time ) is { } block )
 		{
 			switch ( block.Data )
 			{

@@ -12,6 +12,8 @@ public interface IMovieProperty
 	string PropertyName { get; }
 	Type PropertyType { get; }
 
+	bool IsBound { get; }
+
 	object? Value { get; set; }
 }
 
@@ -29,7 +31,7 @@ internal interface IMovieProperty<T> : IMovieProperty
 /// </summary>
 public interface ISceneReferenceMovieProperty : IMovieProperty
 {
-	GameObject GameObject { get; }
+	GameObject? GameObject { get; }
 	Component? Component { get; }
 }
 
@@ -51,9 +53,19 @@ internal static class MovieProperty
 		return new GameObjectMovieProperty( go );
 	}
 
-	public static ISceneReferenceMovieProperty FromComponent( Component comp )
+	public static ISceneReferenceMovieProperty FromGameObject( string placeholderName )
 	{
-		return new ComponentMovieProperty( comp );
+		return new GameObjectMovieProperty( placeholderName );
+	}
+
+	public static ISceneReferenceMovieProperty FromComponent( IMovieProperty target, Component comp )
+	{
+		return new ComponentMovieProperty( target, comp );
+	}
+
+	public static ISceneReferenceMovieProperty FromComponentType( IMovieProperty target, Type type )
+	{
+		return new ComponentMovieProperty( target, type );
 	}
 
 	public static IMemberMovieProperty FromMember( IMovieProperty target, string memberName )
@@ -80,25 +92,35 @@ internal static class MovieProperty
 /// <summary>
 /// Movie property that references a <see cref="GameObject"/> in a scene.
 /// </summary>
-file sealed class GameObjectMovieProperty : IMovieProperty<GameObject>, ISceneReferenceMovieProperty
+file sealed class GameObjectMovieProperty : IMovieProperty<GameObject?>, ISceneReferenceMovieProperty
 {
-	public string PropertyName => Value.Name;
+	private string _placeholderName;
+
+	public string PropertyName => Value?.Name ?? _placeholderName;
 	public Type PropertyType => typeof(GameObject);
 
-	public GameObject Value { get; set; }
+	public bool IsBound => Value.IsValid();
+
+	public GameObject? Value { get; set; }
 
 	public GameObjectMovieProperty( GameObject value )
+		: this ( value.Name )
 	{
 		Value = value;
+	}
+
+	public GameObjectMovieProperty( string placeholderName )
+	{
+		_placeholderName = placeholderName;
 	}
 
 	object? IMovieProperty.Value
 	{
 		get => Value;
-		set => Value = (GameObject)value!;
+		set => Value = (GameObject?)value;
 	}
 
-	GameObject ISceneReferenceMovieProperty.GameObject => Value;
+	GameObject? ISceneReferenceMovieProperty.GameObject => Value;
 	Component? ISceneReferenceMovieProperty.Component => null;
 }
 
@@ -106,38 +128,52 @@ file sealed class GameObjectMovieProperty : IMovieProperty<GameObject>, ISceneRe
 /// Movie property that references a <see cref="Component"/> in a scene.
 /// </summary>
 /// <typeparam name="T">Component type stored in the property.</typeparam>
-file sealed class ComponentMovieProperty : IMovieProperty<Component>, ISceneReferenceMovieProperty
+file sealed class ComponentMovieProperty : IMovieProperty<Component?>, ISceneReferenceMovieProperty, IMemberMovieProperty
 {
-	private Component _value;
+	private Component? _value;
 
-	public string PropertyName { get; private set; }
-	public Type PropertyType { get; private set; }
+	public string PropertyName { get; }
+	public Type PropertyType { get; }
 
-	public Component Value
+	public bool IsBound => Value.IsValid();
+
+	public Component? Value
 	{
-		get => _value;
-		set
-		{
-			_value = value;
-
-			PropertyType = value.GetType();
-			PropertyName = TypeLibrary.GetType( PropertyType ).Title;
-		}
+		get => _value ??= AttemptAutoResolve();
+		set => _value = value;
 	}
 
-	public ComponentMovieProperty( Component value )
+	public IMovieProperty TargetProperty { get; }
+
+	public ComponentMovieProperty( IMovieProperty targetObjectProperty, Component value )
+		: this( targetObjectProperty, value.GetType() )
 	{
 		Value = value;
+	}
+
+	public ComponentMovieProperty( IMovieProperty targetObjectProperty, Type componentType )
+	{
+		TargetProperty = targetObjectProperty;
+
+		PropertyType = componentType;
+		PropertyName = componentType.Name;
 	}
 
 	object? IMovieProperty.Value
 	{
 		get => Value;
-		set => Value = (Component)value!;
+		set => Value = (Component?)value;
 	}
 
-	GameObject ISceneReferenceMovieProperty.GameObject => Value.GameObject;
+	GameObject? ISceneReferenceMovieProperty.GameObject => Value?.GameObject;
 	Component? ISceneReferenceMovieProperty.Component => Value;
+
+	private Component? AttemptAutoResolve()
+	{
+		return TargetProperty is not { IsBound: true, Value: GameObject go }
+			? null
+			: go.Components.Get( PropertyType, FindMode.EverythingInSelf );
+	}
 }
 
 /// <summary>
@@ -149,6 +185,8 @@ file sealed class MemberMovieProperty<T> : IMovieProperty<T>, IMemberMovieProper
 {
 	public IMovieProperty TargetProperty { get; }
 	public MemberDescription Member { get; }
+
+	public bool IsBound => TargetProperty.IsBound;
 
 	public T Value
 	{

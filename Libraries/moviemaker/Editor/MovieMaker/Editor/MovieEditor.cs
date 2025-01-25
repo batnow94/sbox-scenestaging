@@ -69,8 +69,6 @@ public class MovieEditor : Widget
 
 		col.Add( new Label( "Create a Timeline Player component to get started. The\nTimeline Player is responsible for playing the clip in game." ) );
 		col.AddSpacingCell( 32 );
-		col.Add( new Label( "The Timeline Clip is stored in the player component right \nnow. Eventually we should let you save the clip\ndata in an asset file." ) );
-		col.AddSpacingCell( 32 );
 
 		var button = col.Add( new Button.Primary( "Create Player Component", "add_circle" ) );
 		button.Clicked = CreateNew;
@@ -140,6 +138,7 @@ public class MovieEditor : Widget
 		foreach ( var player in allplayers )
 		{
 			hash.Add( player );
+			hash.Add( player.MovieClip );
 		}
 
 		var hc = hash.ToHashCode();

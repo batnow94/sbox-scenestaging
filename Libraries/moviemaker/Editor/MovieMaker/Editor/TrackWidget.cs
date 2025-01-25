@@ -25,7 +25,7 @@ public class TrackWidget : Widget
 		Layout = Layout.Row();
 		Layout.Margin = new Sandbox.UI.Margin( 4, 4, 32, 4 );
 
-		Property = TrackList.Session.Player.GetProperty( Track );
+		Property = TrackList.Session.Player.GetOrAutoResolveProperty( Track );
 
 		// Track might not be mapped to any property in the current scene
 

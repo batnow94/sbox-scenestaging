@@ -32,26 +32,28 @@ partial class MoviePlayer
 		return property;
 	}
 
-	private IMovieProperty? GetOrAutoResolveProperty( MovieTrack track )
+	public IMovieProperty? GetOrAutoResolveProperty( MovieTrack track )
 	{
 		if ( GetProperty( track ) is { } existing ) return existing;
 
+		if ( track.Parent is null && track.PropertyType == typeof(GameObject) )
+		{
+			// For root GameObject tracks, create a property that can have a value filled in later.
+
+			return _sceneRefMap[track.Id] = MovieProperty.FromGameObject( track.Name );
+		}
+
 		// Can only try to auto-resolve if we know the parent's identity
 
-		if ( track.Parent is null || GetProperty( track.Parent ) is not { } parentProperty ) return null;
+		if ( track.Parent is null || GetOrAutoResolveProperty( track.Parent ) is not { } parentProperty ) return null;
 
 		// If we're looking for a component, find it in the containing GameObject
 
-		if ( track.Parent.PropertyType == typeof(GameObject) && track.PropertyType.IsAssignableTo( typeof(Component) ) && parentProperty.Value is GameObject go )
+		if ( track.Parent.PropertyType == typeof(GameObject) && track.PropertyType.IsAssignableTo( typeof(Component) ) )
 		{
-			if ( go.Components.Get( track.PropertyType ) is { } cmp )
-			{
-				return _sceneRefMap[track.Id] = MovieProperty.FromComponent( cmp );
-			}
+			// This will attempt to auto-resolve to a component in parentProperty
 
-			// Not found
-
-			return null;
+			return _sceneRefMap[track.Id] = MovieProperty.FromComponentType( parentProperty, track.PropertyType );
 		}
 
 		// Otherwise must be a named member property
@@ -116,8 +118,9 @@ partial class MoviePlayer
 
 		// Nest component tracks inside the containing game object's track
 		var goTrack = GetOrCreateTrack( cmp.GameObject );
+		var goProperty = GetProperty( goTrack )!;
 
-		var property = MovieProperty.FromComponent( cmp );
+		var property = MovieProperty.FromComponent( goProperty, cmp );
 		var track = MovieClip!.AddTrack( property.PropertyName, property.PropertyType, goTrack );
 
 		_sceneRefMap[track.Id] = property;
