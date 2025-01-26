@@ -76,6 +76,8 @@ public class DopeHandle : GraphicsItem
 	{
 		Position = new Vector2( Session.Current.TimeToPixels( Time ), 0 );
 		Size = new Vector2( 16, Parent.Height );
+
+		track.Update();
 	}
 
 	protected override void OnMousePressed( GraphicsMouseEvent e )

@@ -232,6 +232,7 @@ public class TrackDopesheet : GraphicsView
 		foreach ( var h in SelectedItems.OfType<DopeHandle>() )
 		{
 			h.Destroy();
+			h.Track?.Update();
 		}
 
 		tracklist.WriteTracks();

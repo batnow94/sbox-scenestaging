@@ -39,6 +39,9 @@ public abstract partial class KeyframeCurve : IEnumerable<IKeyframe>
 	public abstract void Clear();
 
 	public abstract void SetKeyframe( float time, object? value, KeyframeInterpolation? interpolation = null );
+	public object GetValue( float time ) => OnGetValue( time );
+
+	protected abstract object OnGetValue( float time );
 
 	protected abstract IEnumerator<IKeyframe> OnGetEnumerator();
 

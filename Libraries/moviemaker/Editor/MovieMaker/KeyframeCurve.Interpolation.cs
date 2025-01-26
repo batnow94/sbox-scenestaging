@@ -11,7 +11,9 @@ public enum KeyframeInterpolation
 
 partial class KeyframeCurve<T>
 {
-	public T GetValue( float time )
+	protected override object OnGetValue( float time ) => GetValue( time );
+
+	public new T GetValue( float time )
 	{
 		if ( _keyframes.Count == 0 ) return default!;
 
