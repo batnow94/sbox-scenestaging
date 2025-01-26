@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Sandbox.MovieMaker;
 
 namespace Editor.MovieMaker;
 
@@ -91,6 +92,8 @@ public class TrackDopesheet : GraphicsView
 
 		foreach ( var track in tracklist.Tracks )
 		{
+			if ( track.Property is ISceneReferenceMovieProperty ) continue;
+
 			if ( track.Channel is null )
 			{
 				track.Channel = new DopesheetTrack( track );

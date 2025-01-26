@@ -89,6 +89,8 @@ public class TrackWidget : Widget
 	{
 		base.DoLayout();
 
+		if ( Channel is null ) return;
+
 		var pos = Channel.GraphicsView.FromScreen( ScreenPosition );
 
 		Channel.DoLayout( new Rect( pos, Size ) );
@@ -96,7 +98,7 @@ public class TrackWidget : Widget
 
 	internal void AddKey( float currentPointer )
 	{
-		Channel.AddKey( currentPointer );
+		Channel?.AddKey( currentPointer );
 	}
 
 	/// <summary>
@@ -104,14 +106,12 @@ public class TrackWidget : Widget
 	/// </summary>
 	public void Write()
 	{
-		if ( Channel is null ) return;
-
-		Channel.Write();
+		Channel?.Write();
 	}
 
 	internal void AddKey( float time, object value )
 	{
-		Channel.AddKey( time, value );
+		Channel?.AddKey( time, value );
 	}
 
 	Menu menu;

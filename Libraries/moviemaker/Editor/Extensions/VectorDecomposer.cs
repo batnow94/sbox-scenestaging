@@ -4,7 +4,7 @@ namespace Editor.MovieMaker;
 
 #nullable enable
 
-public record struct VectorElementDisplay( string Name, Color Color );
+public record struct VectorElementDisplay( string Name, Color Color, float? Min = null, float? Max = null );
 
 public interface IVectorDecomposer
 {
@@ -90,26 +90,34 @@ file class DefaultVectorDecomposer :
 		new( "W", Theme.White )
 	];
 
+	private static VectorElementDisplay[] DefaultRotationElements { get; } =
+	[
+		new( "X", Theme.Red, -1f, 1f ),
+		new( "Y", Theme.Green, -1f, 1f ),
+		new( "Z", Theme.Blue, -1f, 1f ),
+		new( "W", Theme.White, -1f, 1f )
+	];
+
 	private static VectorElementDisplay[] DefaultAngleElements { get; } =
 	[
-		new( "P", Theme.Red ),
-		new( "Y", Theme.Green ),
-		new( "R", Theme.Blue )
+		new( "P", Theme.Red, -180f, 180f ),
+		new( "Y", Theme.Green, -180f, 180f ),
+		new( "R", Theme.Blue, -180f, 180f )
 	];
 
 	private static VectorElementDisplay[] DefaultColorElements { get; } =
 	[
-		new( "R", Color.Red ),
-		new( "G", Color.Green ),
-		new( "B", Color.Blue ),
-		new( "A", Color.White )
+		new( "R", Color.Red, 0f, 1f ),
+		new( "G", Color.Green, 0f, 1f ),
+		new( "B", Color.Blue, 0f, 1f ),
+		new( "A", Color.White, 0f, 1f )
 	];
 
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<float>.Elements => DefaultFloatElements;
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Vector2>.Elements => DefaultVectorElements[..2];
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Vector3>.Elements => DefaultVectorElements[..3];
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Vector4>.Elements => DefaultVectorElements[..4];
-	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Rotation>.Elements => DefaultVectorElements[..4];
+	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Rotation>.Elements => DefaultRotationElements;
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Angles>.Elements => DefaultAngleElements;
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Color>.Elements => DefaultColorElements;
 
@@ -141,10 +149,15 @@ file class DefaultVectorDecomposer :
 
 	public void Decompose( Rotation vector, Span<float> result )
 	{
-		result[0] = vector.x;
-		result[1] = vector.y;
-		result[2] = vector.z;
-		result[3] = vector.w;
+		// Decompose it as the forward vector + how much the right vector is pointing up,
+		// because that looks nice and smooth
+
+		var forward = vector.Forward;
+		var right = vector.Right;
+
+		Decompose( forward, result[..3] );
+
+		result[3] = right.z;
 	}
 
 	public void Decompose( Angles vector, Span<float> result )

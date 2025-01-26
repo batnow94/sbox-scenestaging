@@ -88,12 +88,12 @@ public class DopesheetTrack : GraphicsItem
 
 		Span<float> mins = stackalloc float[elements.Count];
 		Span<float> maxs = stackalloc float[elements.Count];
-		Span<float> scales = stackalloc float[elements.Count];
+		Span<float> mids = stackalloc float[elements.Count];
 
 		for ( var j = 0; j < elements.Count; ++j )
 		{
-			mins[j] = float.PositiveInfinity;
-			maxs[j] = float.NegativeInfinity;
+			mins[j] = elements[j].Min ?? float.PositiveInfinity;
+			maxs[j] = elements[j].Max ?? float.NegativeInfinity;
 		}
 
 		// First pass, find mins and maxs
@@ -114,14 +114,20 @@ public class DopesheetTrack : GraphicsItem
 			}
 		}
 
+		var range = 0f;
+
 		for ( var j = 0; j < elements.Count; ++j )
 		{
-			scales[j] = maxs[j] <= mins[j] ? 0f : height / (maxs[j] - mins[j]);
+			range = Math.Max( range, maxs[j] - mins[j] );
+
+			mids[j] = (mins[j] + maxs[j]) * 0.5f;
 
 			Lines[j].Clear();
 			Lines[j].Position = new Vector2( -xOffset, margin );
 			Lines[j].Size = new Vector2( scrubBar.Width, height );
 		}
+
+		var scale = range <= 0f ? 0f : height / range;
 
 		// Second pass, update lines
 
@@ -137,7 +143,7 @@ public class DopesheetTrack : GraphicsItem
 
 			for ( var j = 0; j < elements.Count; ++j )
 			{
-				var y = (floats[j] - mins[j]) * scales[j];
+				var y = (floats[j] - mids[j]) * scale + 0.5f * height;
 
 				Lines[j].LineTo( new Vector2( x, y ) );
 			}
