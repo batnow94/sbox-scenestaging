@@ -4,7 +4,6 @@ namespace Editor.MovieMaker;
 
 #nullable enable
 
-
 public class TrackWidget : Widget
 {
 	public TrackListWidget TrackList { get; }
@@ -12,6 +11,8 @@ public class TrackWidget : Widget
 	internal IMovieProperty? Property { get; }
 
 	public DopesheetTrack? Channel { get; set; }
+
+	public Layout Buttons { get; }
 
 	RealTimeSince timeSinceInteraction = 1000;
 
@@ -23,7 +24,12 @@ public class TrackWidget : Widget
 		VerticalSizeMode = SizeMode.CanGrow;
 
 		Layout = Layout.Row();
-		Layout.Margin = new Sandbox.UI.Margin( 4, 4, 32, 4 );
+		Layout.Spacing = 12f;
+		Layout.Margin = 4f;
+
+		Buttons = Layout.AddRow();
+		Buttons.Spacing = 2f;
+		Buttons.Margin = 2f;
 
 		Property = TrackList.Session.Player.GetOrAutoResolveProperty( Track );
 
@@ -33,6 +39,8 @@ public class TrackWidget : Widget
 		{
 			return;
 		}
+
+		Layout.Add( new Label( Property.PropertyName ) );
 
 		if ( Property is ISceneReferenceMovieProperty )
 		{
@@ -47,9 +55,6 @@ public class TrackWidget : Widget
 				Layout.Add( ctrl );
 			}
 		}
-
-		Layout.AddSpacingCell( 16 );
-		Layout.Add( new Label( Property.PropertyName ) );
 	}
 
 	public override void OnDestroyed()
@@ -60,21 +65,61 @@ public class TrackWidget : Widget
 		Channel = default;
 	}
 
+	protected override void OnMouseEnter()
+	{
+		base.OnMouseEnter();
+
+		if ( Parent is TrackGroup ) Parent.Update();
+	}
+
+	protected override void OnMouseLeave()
+	{
+		base.OnMouseLeave();
+
+		if ( Parent is TrackGroup ) Parent.Update();
+	}
+
+	protected override void OnFocus( FocusChangeReason reason )
+	{
+		base.OnFocus( reason );
+
+		if ( Parent is TrackGroup ) Parent.Update();
+	}
+
+	protected override void OnBlur( FocusChangeReason reason )
+	{
+		base.OnBlur( reason );
+
+		if ( Parent is TrackGroup ) Parent.Update();
+	}
+
 	protected override Vector2 SizeHint()
 	{
 		return 32;
 	}
 
+	public Color BackgroundColor
+	{
+		get
+		{
+			var defaultColor = TrackDopesheet.Colors.ChannelBackground;
+			var hoveredColor = TrackDopesheet.Colors.ChannelBackground.Lighten( 0.1f );
+			var selectedColor = Color.Lerp( defaultColor, Theme.Primary, 0.5f );
+
+			var isHovered = IsUnderMouse;
+			var isSelected = IsFocused || menu.IsValid() && menu.Visible;
+
+			return isSelected ? selectedColor
+				: isHovered ? hoveredColor
+					: defaultColor;
+		}
+	}
+
 	protected override void OnPaint()
 	{
-		var bg = Extensions.PaintSelectColor( TrackDopesheet.Colors.ChannelBackground, TrackDopesheet.Colors.ChannelBackground.Lighten( 0.1f ), Theme.Primary );
-
-		if ( menu.IsValid() && menu.Visible )
-			bg = Color.Lerp( TrackDopesheet.Colors.ChannelBackground, Theme.Primary, 0.2f );
-
 		Paint.Antialiasing = false;
-		Paint.SetBrushAndPen( bg );
-		Paint.DrawRect( new Rect( LocalRect.Left, LocalRect.Top, LocalRect.Width + 100, LocalRect.Height ), 4 );
+		Paint.SetBrushAndPen( BackgroundColor );
+		Paint.DrawRect( new Rect( LocalRect.Left, LocalRect.Top, LocalRect.Width, LocalRect.Height ), 4 );
 
 		if ( timeSinceInteraction < 2.0f )
 		{

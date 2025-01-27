@@ -113,7 +113,9 @@ public sealed partial class MovieClip
 	{
 		yield return track;
 
-		foreach ( var child in track.Children )
+		// Show tracks with no children first
+
+		foreach ( var child in track.Children.OrderBy( x => x.Children.Count > 0 ) )
 		{
 			foreach ( var descendant in EnumerateAllDescendants( child ) )
 			{

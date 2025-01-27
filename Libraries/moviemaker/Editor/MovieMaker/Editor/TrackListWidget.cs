@@ -41,8 +41,8 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 			trackListWidget.VerticalSizeMode = SizeMode.CanShrink;
 			trackListWidget.MinimumWidth = 256;
 			trackListWidget.Layout = Layout.Column();
-			trackListWidget.Layout.Spacing = 4;
-			trackListWidget.Layout.Margin = new Sandbox.UI.Margin( 16, 0, 0, 0 );
+			trackListWidget.Layout.Spacing = 8f;
+			trackListWidget.Layout.Margin = new Sandbox.UI.Margin( 16, 0, 0, 16f );
 
 			TrackList = trackListWidget.Layout;
 
@@ -93,27 +93,28 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		TrackList.Clear( true );
 		Tracks.Clear();
 
+		var groups = new Dictionary<MovieTrack, TrackGroup>();
+
 		foreach ( var track in Session.Clip.AllTracks )
 		{
-			AddTrack( track );
+			var editorTrack = AddTrack( track );
+
+			var parentGroup = track.Parent is null ? null : groups.GetValueOrDefault( track.Parent );
+
+			if ( track.Children.Count == 0 )
+			{
+				(parentGroup?.Content ?? TrackList).Add( editorTrack );
+				continue;
+			}
+
+			var group = new TrackGroup( editorTrack );
+
+			groups[track] = group;
+
+			(parentGroup?.Content ?? TrackList).Add( group );
 		}
 
 		DopeSheet.UpdateTracks();
-
-		var groups = Tracks
-			.GroupBy( x => GetRoot( x.Track ) );
-
-		foreach ( var groupTracks in groups )
-		{
-			var group = new TrackGroup();
-
-			foreach ( var tr in groupTracks )
-			{
-				group.Content.Add( tr );
-			}
-
-			TrackList.Add( group );
-		}
 	}
 
 	private static MovieTrack GetRoot( MovieTrack track )
@@ -142,12 +143,13 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		return Tracks.FirstOrDefault( x => x.Track == track );
 	}
 
-	public void AddTrack( MovieTrack track )
+	public TrackWidget AddTrack( MovieTrack track )
 	{
 		var trackWidget = new TrackWidget( track, this );
 
 		Tracks.Add( trackWidget );
-		TrackList.Add( trackWidget );
+
+		return trackWidget;
 	}
 
 	protected override void OnVisibilityChanged( bool visible )
