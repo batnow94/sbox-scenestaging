@@ -8,6 +8,8 @@ public class DopeHandle : GraphicsItem
 	public float Time { get; set; }
 	public object Value { get; set; }
 
+	public override Rect BoundingRect => base.BoundingRect.Grow( 0f, 0f, 32f, 0f );
+
 	private DopesheetTrack track;
 
 	public DopesheetTrack Track => track;
@@ -70,6 +72,11 @@ public class DopeHandle : GraphicsItem
 
 		Paint.SetPen( c.WithAlphaMultiplied( 0.3f ) );
 		Paint.DrawLine( new Vector2( Width * 0.5f, 0 ), new Vector2( Width * 0.5f, Height ) );
+
+		if ( Value is Resource resource && AssetSystem.FindByPath( resource.ResourcePath ) is { } asset && asset.GetAssetThumb( true ) is { } pixmap )
+		{
+			Paint.Draw( new Rect( Height * 0.5f, 0f, Height, Height ), pixmap, 0.5f );
+		}
 	}
 
 	internal void UpdatePosition()
