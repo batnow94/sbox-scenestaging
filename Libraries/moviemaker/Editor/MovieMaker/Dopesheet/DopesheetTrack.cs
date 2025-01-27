@@ -1,11 +1,10 @@
 ﻿using System.Linq;
-using static Editor.TextureResidencyInfo;
 
 namespace Editor.MovieMaker;
 
 #nullable enable
 
-public class DopesheetTrack : GraphicsItem
+public partial class DopesheetTrack : GraphicsItem
 {
 	public TrackWidget Track { get; }
 	private IVectorDecomposer? Decomposer { get; }
@@ -15,8 +14,6 @@ public class DopesheetTrack : GraphicsItem
 	IEnumerable<DopeHandle> Handles => Children.OfType<DopeHandle>();
 
 	public Color HandleColor { get; private set; }
-
-	private GraphicsLine[]? Lines { get; set; }
 
 	private static Dictionary<Type, Color> HandleColors { get; } = new()
 	{
@@ -48,106 +45,6 @@ public class DopesheetTrack : GraphicsItem
 		Paint.DrawRect( LocalRect );
 
 		PaintCurve();
-	}
-
-	private void PaintCurve()
-	{
-		if ( Decomposer is not { } decomposer || Curve is not { } curve )
-		{
-			return;
-		}
-
-		var scrubBar = Track.TrackList.Editor.ScrubBar;
-
-		var xOffset = scrubBar.ToPixels( 0f );
-		var t0 = scrubBar.GetTimeAt( 0f );
-		var t1 = scrubBar.GetTimeAt( scrubBar.Width );
-
-		var margin = 2f;
-		var height = LocalRect.Height - margin * 2f;
-
-		const int steps = 128;
-
-		var dx = scrubBar.Width / steps;
-		var dt = (t1 - t0) / steps;
-		var elements = decomposer.Elements;
-
-		if ( elements.Count < 1 ) return;
-
-		if ( Lines is null )
-		{
-			Lines = new GraphicsLine[elements.Count];
-
-			for ( var i = 0; i < elements.Count; ++i )
-			{
-				Lines[i] = new CurveLine( this, elements[i].Color );
-			}
-		}
-
-		Span<float> floats = stackalloc float[elements.Count];
-
-		Span<float> mins = stackalloc float[elements.Count];
-		Span<float> maxs = stackalloc float[elements.Count];
-		Span<float> mids = stackalloc float[elements.Count];
-
-		for ( var j = 0; j < elements.Count; ++j )
-		{
-			mins[j] = elements[j].Min ?? float.PositiveInfinity;
-			maxs[j] = elements[j].Max ?? float.NegativeInfinity;
-		}
-
-		// First pass, find mins and maxs
-
-		for ( var i = 0; i <= steps; ++i )
-		{
-			var t = t0 + i * dt;
-
-			if ( t < 0f ) continue;
-
-			var value = curve.GetValue( t );
-			decomposer.Decompose( value, floats );
-
-			for ( var j = 0; j < elements.Count; ++j )
-			{
-				mins[j] = Math.Min( mins[j], floats[j] );
-				maxs[j] = Math.Max( maxs[j], floats[j] );
-			}
-		}
-
-		var range = 0f;
-
-		for ( var j = 0; j < elements.Count; ++j )
-		{
-			range = Math.Max( range, maxs[j] - mins[j] );
-
-			mids[j] = (mins[j] + maxs[j]) * 0.5f;
-
-			Lines[j].Clear();
-			Lines[j].Position = new Vector2( -xOffset, margin );
-			Lines[j].Size = new Vector2( scrubBar.Width, height );
-		}
-
-		var scale = range <= 0f ? 0f : height / range;
-
-		// Second pass, update lines
-
-		for ( var i = 0; i <= steps; ++i )
-		{
-			var x = i * dx;
-			var t = t0 + i * dt;
-
-			if ( t < 0f ) continue;
-
-			var value = curve.GetValue( t );
-			decomposer.Decompose( value, floats );
-
-			for ( var j = 0; j < elements.Count; ++j )
-			{
-				var y = (floats[j] - mids[j]) * scale + 0.5f * height;
-
-				Lines[j].LineTo( new Vector2( x, y ) );
-			}
-		}
 	}
 
 	public void PositionHandles()
@@ -252,22 +149,5 @@ public class DopesheetTrack : GraphicsItem
 		}
 
 		Track.Track.WriteKeyframes( Curve );
-	}
-}
-
-file class CurveLine : GraphicsLine
-{
-	public Color Color { get; }
-
-	public CurveLine( GraphicsItem parent, Color color )
-		: base( parent )
-	{
-		Color = color;
-	}
-
-	protected override void OnPaint()
-	{
-		Paint.SetPen( Color.WithAlpha( 0.25f ), 2f );
-		PaintLine();
 	}
 }

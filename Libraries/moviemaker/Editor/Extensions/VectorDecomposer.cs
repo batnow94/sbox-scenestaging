@@ -71,11 +71,17 @@ file record VectorDecomposerWrapper<T>( IVectorDecomposer<T> Implementation ) : 
 }
 
 file class DefaultVectorDecomposer :
+	IVectorDecomposer<bool>,
 	IVectorDecomposer<float>, IVectorDecomposer<Vector2>, IVectorDecomposer<Vector3>, IVectorDecomposer<Vector4>,
 	IVectorDecomposer<Rotation>, IVectorDecomposer<Angles>,
 	IVectorDecomposer<Color>
 {
 	public static DefaultVectorDecomposer Instance { get; } = new();
+
+	private static VectorElementDisplay[] DefaultBoolElements { get; } =
+	[
+		new( "X", Color.White, 0f, 1f )
+	];
 
 	private static VectorElementDisplay[] DefaultFloatElements { get; } =
 	[
@@ -113,6 +119,7 @@ file class DefaultVectorDecomposer :
 		new( "A", Color.White, 0f, 1f )
 	];
 
+	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<bool>.Elements => DefaultBoolElements;
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<float>.Elements => DefaultFloatElements;
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Vector2>.Elements => DefaultVectorElements[..2];
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Vector3>.Elements => DefaultVectorElements[..3];
@@ -121,7 +128,12 @@ file class DefaultVectorDecomposer :
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Angles>.Elements => DefaultAngleElements;
 	IReadOnlyList<VectorElementDisplay> IVectorDecomposer<Color>.Elements => DefaultColorElements;
 
-	void IVectorDecomposer<float>.Decompose( float vector, Span<float> result )
+	public void Decompose( bool vector, Span<float> result )
+	{
+		result[0] = vector ? 1f : 0f;
+	}
+
+	public void Decompose( float vector, Span<float> result )
 	{
 		result[0] = vector;
 	}
