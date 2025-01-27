@@ -60,6 +60,8 @@ public class DopeHandle : GraphicsItem
 
 	protected override void OnPaint()
 	{
+		if ( !track.Visible ) return;
+
 		var c = Extensions.PaintSelectColor( HandleColor.WithAlpha( 0.5f ), HandleColor, TrackDopesheet.Colors.HandleSelected );
 		var b = Extensions.PaintSelectColor( Color.Black, Theme.Blue, Theme.White );
 
@@ -81,8 +83,10 @@ public class DopeHandle : GraphicsItem
 
 	internal void UpdatePosition()
 	{
+		PrepareGeometryChange();
+
 		Position = new Vector2( Session.Current.TimeToPixels( Time ), 0 );
-		Size = new Vector2( 16, Parent.Height );
+		Size = track.Visible ? new Vector2( 16, Parent.Height ) : 0f;
 
 		track.Update();
 	}

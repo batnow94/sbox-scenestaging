@@ -102,10 +102,15 @@ public class TrackDopesheet : GraphicsView
 				track.Channel.Read();
 			}
 
+			track.UpdateChannelPosition();
 			track.Channel.PositionHandles();
 		}
 
 		Update();
+
+		// Scrub bar position depends on width of track headers
+
+		tracklist.Editor.ScrubBar.Update();
 	}
 
 	protected override void OnWheel( WheelEvent e )

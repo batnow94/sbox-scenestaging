@@ -16,7 +16,7 @@ public class TrackGroup : Widget
 		set
 		{
 			_collapsed = value;
-			CollapseButton?.Update();
+			CollapseButton.Update();
 
 			foreach ( var child in Children )
 			{
@@ -27,6 +27,8 @@ public class TrackGroup : Widget
 					child.Hidden = _collapsed;
 				}
 			}
+
+			Header.TrackList.DopeSheet.UpdateTracks();
 		}
 	}
 

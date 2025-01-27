@@ -11,6 +11,8 @@ public partial class DopesheetTrack : GraphicsItem
 
 	public KeyframeCurve? Curve { get; private set; }
 
+	public bool Visible => Track.Visible;
+
 	IEnumerable<DopeHandle> Handles => Children.OfType<DopeHandle>();
 
 	public Color HandleColor { get; private set; }
@@ -39,10 +41,13 @@ public partial class DopesheetTrack : GraphicsItem
 
 	protected override void OnPaint()
 	{
-		base.OnPaint();
+		if ( Visible )
+		{
+			base.OnPaint();
 
-		Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
-		Paint.DrawRect( LocalRect );
+			Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
+			Paint.DrawRect( LocalRect );
+		}
 
 		PaintCurve();
 	}
@@ -59,8 +64,10 @@ public partial class DopesheetTrack : GraphicsItem
 
 	internal void DoLayout( Rect r )
 	{
+		PrepareGeometryChange();
+
 		Position = new Vector2( 0, r.Top + 1 );
-		Size = new Vector2( 50000, r.Height );
+		Size = Visible ? new Vector2( 50000, r.Height ) : 0f;
 
 		PositionHandles();
 	}

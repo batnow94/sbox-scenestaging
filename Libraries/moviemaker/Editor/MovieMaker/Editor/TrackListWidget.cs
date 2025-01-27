@@ -12,7 +12,8 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 	public Session Session { get; private set; }
 
 	Layout TrackList;
-	TrackDopesheet DopeSheet;
+
+	public TrackDopesheet DopeSheet { get; }
 
 	public Widget LeftWidget { get; init; }
 	public Widget RightWidget { get; init; }

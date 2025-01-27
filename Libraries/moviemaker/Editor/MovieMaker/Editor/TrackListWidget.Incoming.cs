@@ -1,5 +1,4 @@
 ﻿using Sandbox.Diagnostics;
-using Sandbox.MovieMaker;
 using System.Linq;
 
 namespace Editor.MovieMaker;

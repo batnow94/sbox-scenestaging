@@ -13,8 +13,18 @@ partial class DopesheetTrack
 
 	private void PaintCurve()
 	{
-		if ( Decomposer is not { } decomposer || Curve is not { } curve )
+		if ( !Visible || Decomposer is not { } decomposer || Curve is not { } curve )
 		{
+			if ( Lines is { } lines )
+			{
+				foreach ( var line in lines )
+				{
+					line.Destroy();
+				}
+			}
+
+			Lines = null;
+
 			return;
 		}
 

@@ -57,6 +57,12 @@ public class TrackWidget : Widget
 		}
 	}
 
+	protected override void OnMoved()
+	{
+		Channel?.PositionHandles();
+		UpdateChannelPosition();
+	}
+
 	public override void OnDestroyed()
 	{
 		base.OnDestroyed();
@@ -134,6 +140,11 @@ public class TrackWidget : Widget
 	{
 		base.DoLayout();
 
+		UpdateChannelPosition();
+	}
+
+	public void UpdateChannelPosition()
+	{
 		if ( Channel is null ) return;
 
 		var pos = Channel.GraphicsView.FromScreen( ScreenPosition );

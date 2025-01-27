@@ -154,7 +154,9 @@ public sealed class Session
 	{
 		if ( Clip == Player.EmbeddedClip )
 		{
-			// SceneEditorSession.Active.RecordChange(  );
+			var property = Player.GetSerialized().GetProperty( nameof(MoviePlayer.EmbeddedClip) );
+
+			SceneEditorSession.Active.RecordChange( property );
 			return;
 		}
 
