@@ -7,8 +7,10 @@ namespace Editor.MovieMaker;
 public partial class DopesheetTrack : GraphicsItem
 {
 	public TrackWidget Track { get; }
-	private IVectorDecomposer? Decomposer { get; }
 
+	private bool _canCreatePreview;
+
+	private TrackPreview? Preview { get; set; }
 	public KeyframeCurve? Curve { get; private set; }
 
 	public bool Visible => Track.Visible;
@@ -29,7 +31,9 @@ public partial class DopesheetTrack : GraphicsItem
 	{
 		Track = track;
 		HoverEvents = true;
-		Decomposer = VectorDecomposer.GetDefault( Track.Track.PropertyType );
+		Preview = TrackPreview.Create( this, track.Track );
+
+		_canCreatePreview = Preview is not null;
 
 		HandleColor = Theme.Grey;
 
@@ -41,15 +45,12 @@ public partial class DopesheetTrack : GraphicsItem
 
 	protected override void OnPaint()
 	{
-		if ( Visible )
-		{
-			base.OnPaint();
+		if ( !Visible ) return;
 
-			Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
-			Paint.DrawRect( LocalRect );
-		}
+		base.OnPaint();
 
-		PaintCurve();
+		Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
+		Paint.DrawRect( LocalRect );
 	}
 
 	public void PositionHandles()
@@ -68,6 +69,22 @@ public partial class DopesheetTrack : GraphicsItem
 
 		Position = new Vector2( 0, r.Top + 1 );
 		Size = Visible ? new Vector2( 50000, r.Height ) : 0f;
+
+		if ( Visible && _canCreatePreview )
+		{
+			Preview ??= TrackPreview.Create( this, Track.Track )!;
+
+			var scrubBar = Track.TrackList.Editor.ScrubBar;
+
+			Preview.PrepareGeometryChange();
+			Preview.Position = new Vector2( Session.Current.TimeToPixels( Math.Max( 0f, scrubBar.GetTimeAt( 0f ) ) ), 0f );
+			Preview.Size = new Vector2( scrubBar.Width, r.Height );
+		}
+		else
+		{
+			Preview?.Destroy();
+			Preview = null;
+		}
 
 		PositionHandles();
 	}

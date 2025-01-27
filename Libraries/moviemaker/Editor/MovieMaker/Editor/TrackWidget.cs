@@ -183,6 +183,8 @@ public class TrackWidget : Widget
 	{
 		Track.Remove();
 		TrackList.RebuildTracksIfNeeded();
+
+		Session.Current.ClipModified();
 	}
 
 	public void NoteInteraction()
