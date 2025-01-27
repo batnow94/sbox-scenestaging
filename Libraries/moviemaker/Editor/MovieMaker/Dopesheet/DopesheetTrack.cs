@@ -149,5 +149,7 @@ public partial class DopesheetTrack : GraphicsItem
 		}
 
 		Track.Track.WriteKeyframes( Curve );
+
+		Session.Current.ClipModified();
 	}
 }

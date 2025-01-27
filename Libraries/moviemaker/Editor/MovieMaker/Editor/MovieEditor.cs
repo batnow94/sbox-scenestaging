@@ -103,6 +103,12 @@ public class MovieEditor : Widget
 		}
 	}
 
+	[Shortcut( "editor.save", "CTRL+S" )]
+	public void OnSave()
+	{
+		Session?.Save();
+	}
+
 	[Shortcut( "timeline.copy", "CTRL+C", ShortcutType.Widget )]
 	public void OnCopy()
 	{

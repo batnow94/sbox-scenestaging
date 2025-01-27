@@ -84,7 +84,7 @@
       "__guid": "1fca0395-7d09-4d4e-b0b4-5a3dad467b2a",
       "Flags": 0,
       "Name": "Cube",
-      "Position": "20.33479,134.4427,30.48016",
+      "Position": "17.90045,136.7842,30.87695",
       "Rotation": "0.3730507,0.9259689,0.02183669,-0.05420202",
       "Enabled": true,
       "Components": [
@@ -174,19 +174,19 @@
           "__guid": "3a77879c-03b7-4917-8b26-da2cf373b032",
           "EmbeddedClip": null,
           "IsLooping": true,
-          "IsPlaying": true,
+          "IsPlaying": false,
           "Mapping": [
             {
               "TrackId": "8ceec2e0-515a-4692-8f82-972b27e479f5",
               "GameObject": "1fca0395-7d09-4d4e-b0b4-5a3dad467b2a"
             },
             {
-              "TrackId": "4840e4c0-a118-4017-9a45-648e351a536b",
-              "Component": "69963e2e-59e0-4dd7-8107-af50fd1b40e8"
-            },
-            {
               "TrackId": "c6dc254a-7be5-4558-96e9-1729d069e872",
               "GameObject": "4b6c2e79-4728-487f-b0d8-9af8d2c1b609"
+            },
+            {
+              "TrackId": "4840e4c0-a118-4017-9a45-648e351a536b",
+              "Component": "69963e2e-59e0-4dd7-8107-af50fd1b40e8"
             },
             {
               "TrackId": "40431487-351e-4d5b-bef9-8b0317ef69bc",
@@ -204,7 +204,7 @@
           "OnComponentStart": null,
           "OnComponentUpdate": null,
           "Position": 0,
-          "ReferencedFile": "scenes/tests/components/example1.movie",
+          "ReferencedClip": "scenes/tests/components/example1.movie",
           "TimeScale": 1
         }
       ]

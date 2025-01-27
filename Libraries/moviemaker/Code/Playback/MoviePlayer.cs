@@ -8,7 +8,7 @@ namespace Sandbox.MovieMaker;
 public sealed partial class MoviePlayer : Component
 {
 	private MovieClip? _embeddedClip;
-	private MovieFile? _referencedFile;
+	private MovieFile? _referencedClip;
 
 	private float _position;
 
@@ -19,26 +19,26 @@ public sealed partial class MoviePlayer : Component
 		set
 		{
 			_embeddedClip = value;
-			_referencedFile = value is not null ? null : _referencedFile;
+			_referencedClip = value is not null ? null : _referencedClip;
 
 			UpdatePosition();
 		}
 	}
 
 	[Property, Group( "Source" ), Title( "Movie File" )]
-	public MovieFile? ReferencedFile
+	public MovieFile? ReferencedClip
 	{
-		get => _referencedFile;
+		get => _referencedClip;
 		set
 		{
-			_referencedFile = value;
+			_referencedClip = value;
 			_embeddedClip = value is not null ? null : _embeddedClip;
 
 			UpdatePosition();
 		}
 	}
 
-	public MovieClip? MovieClip => _embeddedClip ?? _referencedFile?.Clip;
+	public MovieClip? MovieClip => _embeddedClip ?? _referencedClip?.Clip;
 
 	[Property, Group( "Playback" )]
 	public bool IsPlaying { get; set; }

@@ -24,6 +24,8 @@ public sealed class Session
 	public float TimeVisible = 100.0f;
 	public float CurrentPointer { get; private set; }
 
+	public bool HasUnsavedChanges { get; private set; }
+
 	SmoothDeltaFloat SmoothZoom = new SmoothDeltaFloat { Value = 100.0f, Target = 100.0f, SmoothTime = 0.3f };
 	SmoothDeltaFloat SmoothPan = new SmoothDeltaFloat { Value = 0.0f, Target = 0f, SmoothTime = 0.3f };
 
@@ -147,5 +149,32 @@ public sealed class Session
 		SmoothZoom.Target = SmoothZoom.Target += (v * SmoothZoom.Target) * 0.01f;
 		SmoothZoom.Target = SmoothZoom.Target.Clamp( 5, 1024 );
 	}
-}
 
+	internal void ClipModified()
+	{
+		if ( Clip == Player.EmbeddedClip )
+		{
+			// SceneEditorSession.Active.RecordChange(  );
+			return;
+		}
+
+		HasUnsavedChanges = true;
+	}
+
+	public void Save()
+	{
+		HasUnsavedChanges = false;
+
+		// If we're referencing a .movie resource, save it to disk
+
+		if ( Clip != Player.ReferencedClip?.Clip )
+		{
+			return;
+		}
+
+		if ( AssetSystem.FindByPath( Player.ReferencedClip!.ResourcePath ) is { } asset )
+		{
+			asset.SaveToDisk( Player.ReferencedClip );
+		}
+	}
+}
