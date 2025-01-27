@@ -22,6 +22,7 @@ partial class MoviePlayer
 			.Select( x => x.Value.Component is { } comp
 				? new MappingModel( x.Key, Component: comp.Id )
 				: new MappingModel( x.Key, x.Value.GameObject!.Id ) )
+			.OrderBy( x => x.TrackId )
 			.ToArray();
 
 		set
