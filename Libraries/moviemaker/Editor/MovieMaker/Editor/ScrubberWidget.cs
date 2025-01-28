@@ -64,8 +64,18 @@ public class ScrubberWidget : Widget
 
 	protected override void OnPaint()
 	{
+		var duration = Session.Clip.Duration;
+
 		Paint.SetBrushAndPen( TrackDopesheet.Colors.Background );
 		Paint.DrawRect( LocalRect );
+
+		// Darker background for the clip duration
+
+		var startX = ToPixels( 0f );
+		var endX = ToPixels( duration );
+
+		Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
+		Paint.DrawRect( new Rect( new Vector2( startX, LocalRect.Top ), new Vector2( endX - startX, LocalRect.Height ) ) );
 
 		Paint.Pen = Color.White.WithAlpha( 0.1f );
 		Paint.PenSize = 3;
@@ -132,7 +142,7 @@ public class ScrubberWidget : Widget
 	[EditorEvent.Frame]
 	public void Frame()
 	{
-		var state = HashCode.Combine( Session.TimeVisible, Session.TimeOffset, Session.CurrentPointer );
+		var state = HashCode.Combine( Session.TimeVisible, Session.TimeOffset, Session.CurrentPointer, Session.Clip.Duration );
 
 		if ( state != lastState )
 		{

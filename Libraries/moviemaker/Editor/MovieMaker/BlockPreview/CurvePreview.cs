@@ -4,13 +4,13 @@ namespace Editor.TrackPainter;
 
 #nullable enable
 
-public abstract partial class VectorPreview<T> : TrackPreview<T>
+public abstract partial class CurvePreview<T> : BlockPreview<T>
 {
 	public record struct Element( string Name, Color Color, float? Min = null, float? Max = null );
 
 	protected IReadOnlyList<Element> Elements { get; }
 
-	protected VectorPreview( params Element[] elements )
+	protected CurvePreview( params Element[] elements )
 	{
 		Elements = elements;
 	}
@@ -20,7 +20,7 @@ public abstract partial class VectorPreview<T> : TrackPreview<T>
 
 #region Scalars
 
-public sealed class BooleanPainter() : VectorPreview<bool>(
+public sealed class BooleanPreview() : CurvePreview<bool>(
 	new Element( "X", Color.White, 0f, 1f ) )
 {
 	protected override void Decompose( bool value, Span<float> result )
@@ -29,7 +29,7 @@ public sealed class BooleanPainter() : VectorPreview<bool>(
 	}
 }
 
-public sealed class FloatPainter() : VectorPreview<float>(
+public sealed class FloatPreview() : CurvePreview<float>(
 	new Element( "X", Color.White ) )
 {
 	protected override void Decompose( float value, Span<float> result )
@@ -42,7 +42,7 @@ public sealed class FloatPainter() : VectorPreview<float>(
 
 #region Vectors
 
-public sealed class Vector2Painter() : VectorPreview<Vector2>(
+public sealed class Vector2Preview() : CurvePreview<Vector2>(
 	new Element( "X", Theme.Red ),
 	new Element( "Y", Theme.Green ) )
 {
@@ -53,7 +53,7 @@ public sealed class Vector2Painter() : VectorPreview<Vector2>(
 	}
 }
 
-public sealed class Vector3Painter() : VectorPreview<Vector3>(
+public sealed class Vector3Preview() : CurvePreview<Vector3>(
 	new Element( "X", Theme.Red ),
 	new Element( "Y", Theme.Green ),
 	new Element( "Z", Theme.Blue ) )
@@ -66,7 +66,7 @@ public sealed class Vector3Painter() : VectorPreview<Vector3>(
 	}
 }
 
-public sealed class Vector4Painter() : VectorPreview<Vector4>(
+public sealed class Vector4Preview() : CurvePreview<Vector4>(
 	new Element( "X", Theme.Red ),
 	new Element( "Y", Theme.Green ),
 	new Element( "Z", Theme.Blue ),
@@ -85,7 +85,7 @@ public sealed class Vector4Painter() : VectorPreview<Vector4>(
 
 #region Rotation
 
-public sealed class AnglesPainter() : VectorPreview<Angles>(
+public sealed class AnglesPreview() : CurvePreview<Angles>(
 	new Element( "P", Theme.Red, -180f, 180f ),
 	new Element( "Y", Theme.Green, -180f, 180f ),
 	new Element( "R", Theme.Blue, -180f, 180f ) )
@@ -98,7 +98,7 @@ public sealed class AnglesPainter() : VectorPreview<Angles>(
 	}
 }
 
-public sealed class RotationPainter() : VectorPreview<Rotation>(
+public sealed class RotationPreview() : CurvePreview<Rotation>(
 	new Element( "X", Theme.Red, -1f, 1f ),
 	new Element( "Y", Theme.Green, -1f, 1f ),
 	new Element( "Z", Theme.Blue, -1f, 1f ),
@@ -123,7 +123,7 @@ public sealed class RotationPainter() : VectorPreview<Rotation>(
 
 #region Color
 
-public sealed class ColorPainter() : VectorPreview<Color>(
+public sealed class ColorPreview() : CurvePreview<Color>(
 	new Element( "R", Color.Red, 0f, 1f ),
 	new Element( "G", Color.Green, 0f, 1f ),
 	new Element( "B", Color.Blue, 0f, 1f ),

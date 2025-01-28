@@ -38,27 +38,43 @@ partial class KeyframeExtensions
 
 		// Compile keyframe data into a fast format for playback
 
-		track.RemoveBlocks();
 
 		if ( keyframes.CanInterpolate )
 		{
 			// Interpolated keyframes: sample at uniform time steps
 
+			var startTime = keyframes.StartTime;
 			var duration = keyframes.Duration;
 			var sampleCount = Math.Max( 1, (int)MathF.Ceiling( sampleRate * duration ) );
 			var samples = new T[sampleCount];
 
 			for ( var i = 0; i < sampleCount; ++i )
 			{
-				var t = duration * i / sampleCount;
+				var t = startTime + duration * i / sampleCount;
 				samples[i] = keyframes.GetValue( t );
 			}
 
-			track.AddBlock( 0f, duration, new SamplesData<T>( sampleRate, InterpolationMode.Linear, samples ) );
+			var data = new SamplesData<T>( sampleRate, InterpolationMode.Linear, samples );
+
+			if ( track.Blocks.Count > 1 )
+			{
+				track.RemoveBlocks();
+				track.AddBlock( startTime, duration, data );
+			}
+			else
+			{
+				track.Blocks[0].StartTime = startTime;
+				track.Blocks[0].Duration = duration;
+				track.Blocks[0].Data = data;
+			}
 		}
 		else
 		{
 			// Not interpolated: constant blocks
+
+			// TODO: keep blocks around, just change values?
+
+			track.RemoveBlocks();
 
 			for ( var i = 0; i < keyframes.Count; ++i )
 			{

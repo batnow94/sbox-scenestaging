@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Sandbox.MovieMaker;
 
 namespace Editor.MovieMaker;
 
@@ -8,9 +9,9 @@ public partial class DopesheetTrack : GraphicsItem
 {
 	public TrackWidget Track { get; }
 
-	private bool _canCreatePreview;
+	private bool? _canCreatePreview;
 
-	private TrackPreview? Preview { get; set; }
+	private List<BlockPreview> BlockPreviews { get; } = new();
 	public KeyframeCurve? Curve { get; private set; }
 
 	public bool Visible => Track.Visible;
@@ -31,9 +32,6 @@ public partial class DopesheetTrack : GraphicsItem
 	{
 		Track = track;
 		HoverEvents = true;
-		Preview = TrackPreview.Create( this, track.Track );
-
-		_canCreatePreview = Preview is not null;
 
 		HandleColor = Theme.Grey;
 
@@ -41,16 +39,6 @@ public partial class DopesheetTrack : GraphicsItem
 		{
 			HandleColor = color;
 		}
-	}
-
-	protected override void OnPaint()
-	{
-		if ( !Visible ) return;
-
-		base.OnPaint();
-
-		Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
-		Paint.DrawRect( LocalRect );
 	}
 
 	public void PositionHandles()
@@ -70,23 +58,20 @@ public partial class DopesheetTrack : GraphicsItem
 		Position = new Vector2( 0, r.Top + 1 );
 		Size = Visible ? new Vector2( 50000, r.Height ) : 0f;
 
-		if ( Visible && _canCreatePreview )
-		{
-			Preview ??= TrackPreview.Create( this, Track.Track )!;
-
-			var scrubBar = Track.TrackList.Editor.ScrubBar;
-
-			Preview.PrepareGeometryChange();
-			Preview.Position = new Vector2( Session.Current.TimeToPixels( Math.Max( 0f, scrubBar.GetTimeAt( 0f ) ) ), 0f );
-			Preview.Size = new Vector2( scrubBar.Width, r.Height );
-		}
-		else
-		{
-			Preview?.Destroy();
-			Preview = null;
-		}
-
+		UpdateBlockPreviews();
 		PositionHandles();
+	}
+
+	private void ClearBlockPreviews()
+	{
+		if ( BlockPreviews.Count == 0 ) return;
+
+		foreach ( var blockPreview in BlockPreviews )
+		{
+			blockPreview.Destroy();
+		}
+
+		BlockPreviews.Clear();
 	}
 
 	internal void OnSelected()
@@ -158,6 +143,47 @@ public partial class DopesheetTrack : GraphicsItem
 		PositionHandles();
 	}
 
+	private void UpdateBlockPreviews()
+	{
+		if ( Visible && _canCreatePreview is not false )
+		{
+			if ( Track.Track.Blocks.Count != BlockPreviews.Count )
+			{
+				ClearBlockPreviews();
+			}
+
+			var blocks = Track.Track.Blocks;
+
+			for ( var i = 0; i < blocks.Count; ++i )
+			{
+				var block = blocks[i];
+
+				if ( BlockPreviews.Count <= i )
+				{
+					if ( BlockPreview.Create( this, block ) is not { } newPreview )
+					{
+						_canCreatePreview = false;
+						return;
+					}
+
+					BlockPreviews.Add( newPreview );
+				}
+
+				var preview = BlockPreviews[i];
+				var duration = block.Duration ?? Track.Track.Clip.Duration - block.StartTime;
+
+				preview.Block = block;
+				preview.PrepareGeometryChange();
+				preview.Position = new Vector2( Session.Current.TimeToPixels( block.StartTime ), 0f );
+				preview.Size = new Vector2( Session.Current.TimeToPixels( duration ), LocalRect.Height );
+			}
+		}
+		else
+		{
+			ClearBlockPreviews();
+		}
+	}
+
 	/// <summary>
 	/// Write from this sheet to the target
 	/// </summary>
@@ -175,5 +201,7 @@ public partial class DopesheetTrack : GraphicsItem
 		Track.Track.WriteKeyframes( Curve );
 
 		Session.Current.ClipModified();
+
+		UpdateBlockPreviews();
 	}
 }

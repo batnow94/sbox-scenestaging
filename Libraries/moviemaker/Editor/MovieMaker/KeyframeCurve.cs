@@ -28,6 +28,7 @@ public abstract partial class KeyframeCurve : IEnumerable<IKeyframe>
 
 	public abstract Type ValueType { get; }
 	public abstract int Count { get; }
+	public abstract float StartTime { get; }
 	public abstract float Duration { get; }
 	public abstract bool CanInterpolate { get; }
 
@@ -59,7 +60,9 @@ public partial class KeyframeCurve<T> : KeyframeCurve, IEnumerable<Keyframe<T>>
 
 	public override Type ValueType => typeof( T );
 	public override int Count => _keyframes.Count;
-	public override float Duration => _keyframes.Count == 0 ? 0f : _keyframes.Values[^1].Time;
+
+	public override float StartTime => _keyframes.Count == 0 ? 0f : _keyframes.Values[0].Time;
+	public override float Duration => _keyframes.Count == 0 ? 0f : _keyframes.Values[^1].Time - _keyframes.Values[0].Time;
 
 	public override bool CanInterpolate => _interpolator is not null;
 

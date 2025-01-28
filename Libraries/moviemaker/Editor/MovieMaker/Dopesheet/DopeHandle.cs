@@ -74,11 +74,6 @@ public class DopeHandle : GraphicsItem
 
 		Paint.SetPen( c.WithAlphaMultiplied( 0.3f ) );
 		Paint.DrawLine( new Vector2( Width * 0.5f, 0 ), new Vector2( Width * 0.5f, Height ) );
-
-		if ( Value is Resource resource && AssetSystem.FindByPath( resource.ResourcePath ) is { } asset && asset.GetAssetThumb( true ) is { } pixmap )
-		{
-			Paint.Draw( new Rect( Height * 0.5f, 0f, Height, Height ), pixmap, 0.5f );
-		}
 	}
 
 	internal void UpdatePosition()

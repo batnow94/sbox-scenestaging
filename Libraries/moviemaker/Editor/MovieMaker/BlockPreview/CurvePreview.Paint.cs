@@ -4,66 +4,46 @@ namespace Editor.TrackPainter;
 
 #nullable enable
 
-partial class VectorPreview<T>
+partial class CurvePreview<T>
 {
-	[field: ThreadStatic]
-	private static List<float>? PaintCurve_Times { get; set; }
-
 	private GraphicsLine[]? Lines { get; set; }
 
-
-	protected override void OnPaint( PaintContext context )
+	protected virtual void GetCurveTimes( List<float> times )
 	{
-		if ( Curve is not { } curve ) return;
-
-		var times = PaintCurve_Times ??= new();
-
-		var t0 = context.MinTime;
-		var t1 = context.MaxTime;
-
-		times.Clear();
-		times.Add( t0 );
-
-		var lastTime = t0;
-		var maxDt = (t1 - t0) / 128f;
-
-		const float epsilon = 0.0001f;
-
-		foreach ( var keyframe in curve )
+		if ( Constant is { } constant )
 		{
-			if ( keyframe.Time > t0 && keyframe.Time < t1 )
+			times.Add( 0f );
+			times.Add( Duration );
+		}
+		else if ( Samples is { } samples )
+		{
+			var dt = 1f / samples.SampleRate;
+
+			for ( var i = 0; i <= samples.Samples.Count; ++i )
 			{
-				var interpolation = keyframe.Interpolation ?? curve.Interpolation;
-
-				if ( interpolation is KeyframeInterpolation.None && lastTime < keyframe.Time - epsilon )
-				{
-					times.Add( keyframe.Time - epsilon );
-				}
-
-				times.Add( keyframe.Time );
-
-				lastTime = keyframe.Time;
+				times.Add( i * dt );
 			}
 		}
+	}
 
-		times.Add( t1 );
-		times.Sort();
-
-		const int safetyLimit = 2048;
-
-		for ( var i = 1; i < times.Count && times.Count < safetyLimit; ++i )
+	protected T GetValue( float time )
+	{
+		if ( Samples is { } samples )
 		{
-			var prev = times[i - 1];
-			var next = times[i];
-
-			if ( next - prev > maxDt )
-			{
-				times.Insert( i--, (next + prev) * 0.5f );
-			}
+			return samples.GetValue( time );
 		}
 
-		var margin = 2f;
-		var height = LocalRect.Height - margin * 2f;
+		if ( Constant is { } constant )
+		{
+			return constant.Value;
+		}
+
+		return default!;
+	}
+
+	protected override void OnPaint()
+	{
+		base.OnPaint();
 
 		if ( Elements.Count < 1 ) return;
 
@@ -76,6 +56,22 @@ partial class VectorPreview<T>
 				Lines[i] = new CurveLine( this, Elements[i].Color );
 			}
 		}
+
+		foreach ( var line in Lines )
+		{
+			line.Clear();
+		}
+
+		var times = Static.PaintCurve_Times ??= new();
+
+		times.Clear();
+
+		GetCurveTimes( times );
+
+		if ( times.Count == 0 ) return;
+
+		var margin = 2f;
+		var height = LocalRect.Height - margin * 2f;
 
 		Span<float> floats = stackalloc float[Elements.Count];
 
@@ -95,7 +91,7 @@ partial class VectorPreview<T>
 		{
 			if ( t < 0f ) continue;
 
-			var value = curve.GetValue( t );
+			var value = GetValue( t );
 			Decompose( value, floats );
 
 			for ( var j = 0; j < Elements.Count; ++j )
@@ -115,18 +111,21 @@ partial class VectorPreview<T>
 
 			Lines[j].Clear();
 			Lines[j].Position = new Vector2( 0f, margin );
-			Lines[j].Size = new Vector2( context.LocalRect.Width, height );
+			Lines[j].Size = new Vector2( LocalRect.Width, height );
 		}
 
 		var scale = range <= 0f ? 0f : height / range;
 
 		// Second pass, update lines
 
-		var dxdt = context.LocalRect.Width / (t1 - t0);
+		var t0 = 0f;
+		var t1 = Duration;
+
+		var dxdt = LocalRect.Width / (t1 - t0);
 
 		foreach ( var t in times )
 		{
-			var value = curve.GetValue( t );
+			var value = GetValue( t );
 			var x = LocalRect.Left + (t - t0) * dxdt;
 
 			Decompose( value, floats );
@@ -146,6 +145,12 @@ partial class VectorPreview<T>
 			}
 		}
 	}
+}
+
+file class Static
+{
+	[field: ThreadStatic]
+	public static List<float>? PaintCurve_Times { get; set; }
 }
 
 file class CurveLine : GraphicsLine
