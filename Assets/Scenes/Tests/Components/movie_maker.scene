@@ -177,24 +177,24 @@
           "IsPlaying": false,
           "Mapping": [
             {
-              "TrackId": "8ceec2e0-515a-4692-8f82-972b27e479f5",
-              "GameObject": "1fca0395-7d09-4d4e-b0b4-5a3dad467b2a"
-            },
-            {
-              "TrackId": "c6dc254a-7be5-4558-96e9-1729d069e872",
-              "GameObject": "4b6c2e79-4728-487f-b0d8-9af8d2c1b609"
+              "TrackId": "40431487-351e-4d5b-bef9-8b0317ef69bc",
+              "Component": "6ef5b591-d8cc-411a-b8e5-88e7292261cc"
             },
             {
               "TrackId": "4840e4c0-a118-4017-9a45-648e351a536b",
               "Component": "69963e2e-59e0-4dd7-8107-af50fd1b40e8"
             },
             {
-              "TrackId": "40431487-351e-4d5b-bef9-8b0317ef69bc",
-              "Component": "6ef5b591-d8cc-411a-b8e5-88e7292261cc"
+              "TrackId": "8ceec2e0-515a-4692-8f82-972b27e479f5",
+              "GameObject": "1fca0395-7d09-4d4e-b0b4-5a3dad467b2a"
             },
             {
               "TrackId": "b90bedd3-71b7-4b7c-8f75-bb6eb3a75a99",
               "Component": "52fddcf0-360b-43c0-8a20-aac6ea3a9f5f"
+            },
+            {
+              "TrackId": "c6dc254a-7be5-4558-96e9-1729d069e872",
+              "GameObject": "4b6c2e79-4728-487f-b0d8-9af8d2c1b609"
             }
           ],
           "OnComponentDestroy": null,
