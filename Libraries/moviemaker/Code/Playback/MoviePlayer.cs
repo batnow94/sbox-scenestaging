@@ -83,17 +83,13 @@ public sealed partial class MoviePlayer : Component
 			}
 		}
 
-		// We allow negative positions so we can have a delayed start
-
-		if ( _sceneRefMap.Count > 0 && _position >= 0f )
-		{
-			ApplyFrame( _position );
-		}
+		ApplyFrame( _position );
 	}
 
-	internal void ApplyFrame( float time )
+	public void ApplyFrame( float time )
 	{
-		if ( MovieClip is null ) return;
+		if ( MovieClip is null || _sceneRefMap.Count == 0 ) return;
+		if ( time < 0f || time > MovieClip.Duration ) return;
 
 		foreach ( var track in MovieClip.RootTracks )
 		{

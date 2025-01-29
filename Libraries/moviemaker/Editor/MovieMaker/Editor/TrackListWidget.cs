@@ -75,7 +75,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 
 	void ScrubToTime( float time )
 	{
-		Session.Player.Position = time;
+		Session.Player.ApplyFrame( time );
 	}
 
 	private void Load( MovieClip clip )

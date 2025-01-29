@@ -58,7 +58,7 @@ partial class MoviePlayer
 
 		// Otherwise must be a named member property
 
-		return _memberMap[track.Id] = MovieProperty.FromMember( parentProperty, track.Name );
+		return _memberMap[track.Id] = MovieProperty.FromMember( parentProperty, track.Name, track.PropertyType );
 	}
 
 	public MovieTrack? GetTrack( GameObject go )
@@ -90,14 +90,38 @@ partial class MoviePlayer
 		return null;
 	}
 
-	public MovieTrack? GetTrack( GameObject go, string propertyName )
+	public MovieTrack? GetTrack( GameObject go, string propertyPath )
 	{
-		return GetTrack( go )?.Children.FirstOrDefault( x => x.Name == propertyName );
+		return GetTrack( GetTrack( go ), propertyPath );
 	}
 
-	public MovieTrack? GetTrack( Component cmp, string propertyName )
+	public MovieTrack? GetTrack( Component cmp, string propertyPath )
 	{
-		return GetTrack( cmp )?.Children.FirstOrDefault( x => x.Name == propertyName );
+		return GetTrack( GetTrack( cmp ), propertyPath );
+	}
+
+	private MovieTrack? GetTrack( MovieTrack? parentTrack, string propertyPath )
+	{
+		while ( parentTrack is not null && propertyPath.Length > 0 )
+		{
+			var propertyName = propertyPath;
+
+			// TODO: Hack for anim graph parameters including periods
+
+			if ( parentTrack.PropertyType != typeof( SkinnedModelRenderer.ParameterAccessor ) && propertyPath.IndexOf( '.' ) is var index and > -1 )
+			{
+				propertyName = propertyPath[..index];
+				propertyPath = propertyPath[(index + 1)..];
+			}
+			else
+			{
+				propertyPath = string.Empty;
+			}
+
+			parentTrack = parentTrack.Children.FirstOrDefault( x => x.Name == propertyName );
+		}
+
+		return parentTrack;
 	}
 
 	public MovieTrack GetOrCreateTrack( GameObject go )
@@ -128,35 +152,67 @@ partial class MoviePlayer
 		return track;
 	}
 
-	public MovieTrack GetOrCreateTrack( GameObject go, string propertyName )
+	public MovieTrack GetOrCreateTrack( GameObject go, string propertyPath )
 	{
-		if ( GetTrack( go, propertyName ) is { } existing ) return existing;
+		if ( GetTrack( go, propertyPath ) is { } existing ) return existing;
 
-		// Nest property tracks inside the containing game object's track
-		var goTrack = GetOrCreateTrack( go );
-		var goProperty = GetProperty( goTrack )!;
+		// Nest property tracks inside the containing GameObject's track
 
-		var property = MovieProperty.FromMember( goProperty, propertyName );
-		var track = MovieClip!.AddTrack( property.PropertyName, property.PropertyType, goTrack );
-
-		_memberMap[track.Id] = property;
-
-		return track;
+		return GetOrCreateTrack( GetOrCreateTrack( go ), propertyPath );
 	}
 
-	public MovieTrack GetOrCreateTrack( Component cmp, string propertyName )
+	public MovieTrack GetOrCreateTrack( Component cmp, string propertyPath )
 	{
-		if ( GetTrack( cmp, propertyName ) is { } existing ) return existing;
+		if ( GetTrack( cmp, propertyPath ) is { } existing ) return existing;
 
-		// Nest property tracks inside the containing component's track
-		var cmpTrack = GetOrCreateTrack( cmp );
-		var cmpProperty = GetProperty( cmpTrack )!;
+		// Nest property tracks inside the containing Component's track
 
-		var property = MovieProperty.FromMember( cmpProperty, propertyName );
-		var track = MovieClip!.AddTrack( property.PropertyName, property.PropertyType, cmpTrack );
+		return GetOrCreateTrack( GetOrCreateTrack( cmp ), propertyPath );
+	}
+
+	public MovieTrack GetOrCreateTrack( MovieTrack parentTrack, string propertyPath )
+	{
+		var parentProperty = GetProperty( parentTrack )!;
+
+		while ( propertyPath.Length > 0 )
+		{
+			var propertyName = propertyPath;
+
+			// TODO: Hack for anim graph parameters including periods
+
+			if ( parentTrack.PropertyType != typeof(SkinnedModelRenderer.ParameterAccessor) && propertyPath.IndexOf( '.' ) is var index and > -1 )
+			{
+				propertyName = propertyPath[..index];
+				propertyPath = propertyPath[(index + 1)..];
+			}
+			else
+			{
+				propertyPath = string.Empty;
+			}
+
+			(parentTrack, parentProperty) = GetOrCreateTrack( parentTrack, parentProperty, propertyName );
+		}
+
+		return parentTrack;
+	}
+
+	private (MovieTrack Track, IMovieProperty Property) GetOrCreateTrack( MovieTrack parentTrack, IMovieProperty parentProperty, string propertyName )
+	{
+		if ( parentTrack.Children.FirstOrDefault( x => x.Name == propertyName ) is { } existingTrack )
+		{
+			if ( GetProperty( existingTrack ) is not IMemberMovieProperty existingProperty )
+			{
+				_memberMap[existingTrack.Id] = existingProperty = MovieProperty.FromMember( parentProperty, propertyName, existingTrack.PropertyType )!;
+			}
+
+			return (existingTrack, existingProperty);
+		}
+
+		var property = MovieProperty.FromMember( parentProperty, propertyName, null );
+		var track = MovieClip!.AddTrack( property.PropertyName, property.PropertyType, parentTrack );
 
 		_memberMap[track.Id] = property;
 
-		return track;
+		return (track, property);
 	}
 }

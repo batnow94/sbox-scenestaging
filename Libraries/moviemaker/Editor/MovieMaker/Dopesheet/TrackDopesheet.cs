@@ -223,8 +223,6 @@ public class TrackDopesheet : GraphicsView
 
 		foreach ( var entry in copied )
 		{
-			Log.Info( $"{entry.value}" );
-
 			var track = tracklist.Tracks.FirstOrDefault( x => x.Track.Id == entry.track );
 			if ( track is null ) continue;
 
@@ -245,6 +243,4 @@ public class TrackDopesheet : GraphicsView
 
 		tracklist.WriteTracks();
 	}
-
-
 }

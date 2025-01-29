@@ -142,7 +142,7 @@ public class ScrubberWidget : Widget
 	[EditorEvent.Frame]
 	public void Frame()
 	{
-		var state = HashCode.Combine( Session.TimeVisible, Session.TimeOffset, Session.CurrentPointer, Session.Clip.Duration );
+		var state = HashCode.Combine( Session.TimeVisible, Session.TimeOffset, Session.CurrentPointer, Session.Clip?.Duration );
 
 		if ( state != lastState )
 		{

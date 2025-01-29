@@ -11,7 +11,7 @@ public sealed class Session
 
 	public MoviePlayer Player { get; private set; }
 
-	internal MovieClip Clip => Player.MovieClip;
+	internal MovieClip Clip { get; private set; }
 
 	/// <summary>
 	/// If true, we automatically record new keyframes when properties are changed
@@ -32,6 +32,7 @@ public sealed class Session
 	internal void SetPlayer( MoviePlayer player )
 	{
 		Player = player;
+		Clip = player.MovieClip;
 	}
 
 	public float PixelsToTime( float pixels, bool snap = false )
@@ -83,7 +84,7 @@ public sealed class Session
 
 			OnPointerChanged?.Invoke( CurrentPointer );
 
-			Player.Position = CurrentPointer;
+			Player.ApplyFrame( CurrentPointer );
 		}
 	}
 

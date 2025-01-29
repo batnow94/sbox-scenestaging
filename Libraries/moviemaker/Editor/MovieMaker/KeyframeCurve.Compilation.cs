@@ -56,7 +56,7 @@ partial class KeyframeExtensions
 
 			var data = new SamplesData<T>( sampleRate, InterpolationMode.Linear, samples );
 
-			if ( track.Blocks.Count > 1 )
+			if ( track.Blocks.Count != 1 )
 			{
 				track.RemoveBlocks();
 				track.AddBlock( startTime, duration, data );

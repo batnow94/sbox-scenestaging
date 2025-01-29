@@ -92,29 +92,38 @@ public partial class DopesheetTrack : GraphicsItem
 		}
 	}
 
-	internal void AddKey( float time )
+	internal void AddKey( float time ) => AddKey( time, Track.Property!.Value );
+
+	internal bool UpdateKey( float time ) => UpdateKey( time, Track.Property!.Value );
+
+	internal void AddKey( float time, object? value )
 	{
-		AddKey( time, Track.Property!.Value );
+		var h = FindKey( time ) ?? new DopeHandle( this );
+
+		UpdateKey( h, time, value );
 	}
 
-	internal void AddKey( float currentPointer, object value )
+	internal bool UpdateKey( float time, object? value )
 	{
-		var h = Handles.Where( x => MathX.AlmostEqual( x.Time, currentPointer ) ).FirstOrDefault();
+		if ( FindKey( time ) is not { } h ) return false;
 
-		if ( h is null )
-		{
-			h = new DopeHandle( this );
+		UpdateKey( h, time, value );
 
-			//EditorUtility.PlayRawSound( "sounds/editor/add.wav" );
-		}
+		return true;
+	}
 
-		h.Time = currentPointer;
+	private void UpdateKey( DopeHandle h, float time, object? value )
+	{
+		//EditorUtility.PlayRawSound( "sounds/editor/add.wav" );
+		h.Time = time;
 		h.Value = value;
 
 		h.UpdatePosition();
 
 		Update();
 	}
+
+	private DopeHandle? FindKey( float time ) => Handles.FirstOrDefault( x => x.Time.AlmostEqual( time, 0.001f ) );
 
 	/// <summary>
 	/// Read from the Clip

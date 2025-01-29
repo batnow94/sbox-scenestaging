@@ -152,18 +152,20 @@ public class TrackWidget : Widget
 		Channel.DoLayout( new Rect( pos, Size ) );
 	}
 
-	internal void AddKey( float currentPointer )
-	{
-		Channel?.AddKey( currentPointer );
-	}
+	/// <summary>
+	/// Add a keyframe at the given <paramref name="time"/>.
+	/// </summary>
+	internal void AddKey( float time ) => Channel?.AddKey( time );
+
+	/// <summary>
+	/// Update the value of a keyframe at the given <paramref name="time"/>, if it exists.
+	/// </summary>
+	internal bool UpdateKey( float time ) => Channel?.UpdateKey( time ) ?? false;
 
 	/// <summary>
 	/// Write data from this widget to the Clip
 	/// </summary>
-	public void Write()
-	{
-		Channel?.Write();
-	}
+	public void Write() => Channel?.Write();
 
 	internal void AddKey( float time, object value )
 	{

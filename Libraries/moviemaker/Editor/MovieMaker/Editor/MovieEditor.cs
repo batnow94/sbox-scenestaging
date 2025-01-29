@@ -159,7 +159,7 @@ public class MovieEditor : Widget
 		if ( Session is not null )
 		{
 			// Whatever we were editing doesn't exist anymore!
-			if ( playersAvailable.All( x => x.MovieClip != Session.Clip ) )
+			if ( playersAvailable.All( x => x.MovieClip != Session.Clip || x != Session.Player ) )
 			{
 				CloseSession();
 			}

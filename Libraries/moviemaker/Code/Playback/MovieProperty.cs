@@ -46,7 +46,7 @@ public interface IMemberMovieProperty : IMovieProperty
 	IMovieProperty TargetProperty { get; }
 }
 
-internal static class MovieProperty
+internal static partial class MovieProperty
 {
 	public static ISceneReferenceMovieProperty FromGameObject( GameObject go )
 	{
@@ -68,8 +68,13 @@ internal static class MovieProperty
 		return new ComponentMovieProperty( target, type );
 	}
 
-	public static IMemberMovieProperty FromMember( IMovieProperty target, string memberName )
+	public static IMemberMovieProperty FromMember( IMovieProperty target, string memberName, Type? expectedType )
 	{
+		if ( FromAnimParam( target, memberName, expectedType ) is { } animParamProperty )
+		{
+			return animParamProperty;
+		}
+
 		var targetType = TypeLibrary.GetType( target.PropertyType );
 		var member = targetType.Members
 			.Where( x => x is FieldDescription or PropertyDescription )
