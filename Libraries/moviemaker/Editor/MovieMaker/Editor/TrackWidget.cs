@@ -10,7 +10,7 @@ public class TrackWidget : Widget
 	public MovieTrack Track { get; }
 	internal IMovieProperty? Property { get; }
 
-	public DopesheetTrack? Channel { get; set; }
+	public DopeSheetTrack? Channel { get; set; }
 
 	public Layout Buttons { get; }
 
@@ -59,7 +59,6 @@ public class TrackWidget : Widget
 
 	protected override void OnMoved()
 	{
-		Channel?.PositionHandles();
 		UpdateChannelPosition();
 	}
 
@@ -108,8 +107,8 @@ public class TrackWidget : Widget
 	{
 		get
 		{
-			var defaultColor = TrackDopesheet.Colors.ChannelBackground;
-			var hoveredColor = TrackDopesheet.Colors.ChannelBackground.Lighten( 0.1f );
+			var defaultColor = DopeSheet.Colors.ChannelBackground;
+			var hoveredColor = DopeSheet.Colors.ChannelBackground.Lighten( 0.1f );
 			var selectedColor = Color.Lerp( defaultColor, Theme.Primary, 0.5f );
 
 			var isHovered = IsUnderMouse;
@@ -152,26 +151,6 @@ public class TrackWidget : Widget
 		Channel.DoLayout( new Rect( pos, Size ) );
 	}
 
-	/// <summary>
-	/// Add a keyframe at the given <paramref name="time"/>.
-	/// </summary>
-	internal void AddKey( float time ) => Channel?.AddKey( time );
-
-	/// <summary>
-	/// Update the value of a keyframe at the given <paramref name="time"/>, if it exists.
-	/// </summary>
-	internal bool UpdateKey( float time ) => Channel?.UpdateKey( time ) ?? false;
-
-	/// <summary>
-	/// Write data from this widget to the Clip
-	/// </summary>
-	public void Write() => Channel?.Write();
-
-	internal void AddKey( float time, object value )
-	{
-		Channel?.AddKey( time, value );
-	}
-
 	Menu menu;
 
 	protected override void OnContextMenu( ContextMenuEvent e )
@@ -186,7 +165,7 @@ public class TrackWidget : Widget
 		Track.Remove();
 		TrackList.RebuildTracksIfNeeded();
 
-		Session.Current.ClipModified();
+		Session.Current?.ClipModified();
 	}
 
 	public void NoteInteraction()

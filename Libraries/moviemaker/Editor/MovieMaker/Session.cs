@@ -1,22 +1,21 @@
-﻿using Sandbox.MovieMaker;
+﻿using System.Linq;
+using Sandbox.MovieMaker;
 
 namespace Editor.MovieMaker;
+
+#nullable enable
 
 /// <summary>
 /// Centralizes the current state of a moviemaker editor session
 /// </summary>
 public sealed class Session
 {
-	public static Session Current { get; internal set; }
+	public static Session? Current { get; internal set; }
 
-	public MoviePlayer Player { get; private set; }
+	public MoviePlayer Player { get; private set; } = null!;
 
-	internal MovieClip Clip { get; private set; }
-
-	/// <summary>
-	/// If true, we automatically record new keyframes when properties are changed
-	/// </summary>
-	public bool KeyframeRecording { get; set; }
+	internal MovieClip? Clip { get; private set; }
+	internal MovieEditor Editor { get; set; } = null!;
 
 	public bool Playing { get; set; }
 	public bool Loop { get; set; } = true;
@@ -35,6 +34,8 @@ public sealed class Session
 
 	public bool HasUnsavedChanges { get; private set; }
 
+	public EditMode? EditMode { get; private set; }
+
 	SmoothDeltaFloat SmoothZoom = new SmoothDeltaFloat { Value = 100.0f, Target = 100.0f, SmoothTime = 0.3f };
 	SmoothDeltaFloat SmoothPan = new SmoothDeltaFloat { Value = 0.0f, Target = 0f, SmoothTime = 0.3f };
 
@@ -42,6 +43,18 @@ public sealed class Session
 	{
 		Player = player;
 		Clip = player.MovieClip;
+	}
+
+	internal void SetEditMode( EditModeType? type )
+	{
+		if ( type?.IsMatchingType( EditMode ) ?? EditMode is null ) return;
+
+		EditMode?.Disable();
+
+		Editor.Toolbar.EditModeControls.Clear( true );
+
+		EditMode = type?.Create();
+		EditMode?.Enable( this );
 	}
 
 	public float PixelsToTime( float pixels, bool snap = false )

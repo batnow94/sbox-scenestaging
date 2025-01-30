@@ -1,54 +1,21 @@
-﻿using System.Linq;
-using Sandbox.MovieMaker;
-
-namespace Editor.MovieMaker;
+﻿namespace Editor.MovieMaker;
 
 #nullable enable
 
-public partial class DopesheetTrack : GraphicsItem
+public partial class DopeSheetTrack : GraphicsItem
 {
 	public TrackWidget Track { get; }
 
 	private bool? _canCreatePreview;
 
 	private List<BlockPreview> BlockPreviews { get; } = new();
-	public KeyframeCurve? Curve { get; private set; }
 
 	public bool Visible => Track.Visible;
 
-	IEnumerable<DopeHandle> Handles => Children.OfType<DopeHandle>();
-
-	public Color HandleColor { get; private set; }
-
-	private static Dictionary<Type, Color> HandleColors { get; } = new()
-	{
-		{ typeof(Vector3), Theme.Blue },
-		{ typeof(Rotation), Theme.Green },
-		{ typeof(Color), Theme.Pink },
-		{ typeof(float), Theme.Yellow },
-	};
-
-	public DopesheetTrack( TrackWidget track )
+	public DopeSheetTrack( TrackWidget track )
 	{
 		Track = track;
 		HoverEvents = true;
-
-		HandleColor = Theme.Grey;
-
-		if ( HandleColors.TryGetValue( track.Track.PropertyType, out var color ) )
-		{
-			HandleColor = color;
-		}
-	}
-
-	public void PositionHandles()
-	{
-		foreach ( var handle in Handles )
-		{
-			handle.UpdatePosition();
-		}
-
-		Update();
 	}
 
 	internal void DoLayout( Rect r )
@@ -59,7 +26,8 @@ public partial class DopesheetTrack : GraphicsItem
 		Size = Visible ? new Vector2( 50000, r.Height ) : 0f;
 
 		UpdateBlockPreviews();
-		PositionHandles();
+
+		Track.TrackList.Session.EditMode?.TrackLayout( this, r );
 	}
 
 	private void ClearBlockPreviews()
@@ -92,67 +60,7 @@ public partial class DopesheetTrack : GraphicsItem
 		}
 	}
 
-	internal void AddKey( float time ) => AddKey( time, Track.Property!.Value );
-
-	internal bool UpdateKey( float time ) => UpdateKey( time, Track.Property!.Value );
-
-	internal void AddKey( float time, object? value )
-	{
-		var h = FindKey( time ) ?? new DopeHandle( this );
-
-		UpdateKey( h, time, value );
-	}
-
-	internal bool UpdateKey( float time, object? value )
-	{
-		if ( FindKey( time ) is not { } h ) return false;
-
-		UpdateKey( h, time, value );
-
-		return true;
-	}
-
-	private void UpdateKey( DopeHandle h, float time, object? value )
-	{
-		//EditorUtility.PlayRawSound( "sounds/editor/add.wav" );
-		h.Time = time;
-		h.Value = value;
-
-		h.UpdatePosition();
-
-		Update();
-	}
-
-	private DopeHandle? FindKey( float time ) => Handles.FirstOrDefault( x => x.Time.AlmostEqual( time, 0.001f ) );
-
-	/// <summary>
-	/// Read from the Clip
-	/// </summary>
-	public void Read()
-	{
-		foreach ( var h in Handles )
-		{
-			h.Destroy();
-		}
-
-		if ( Track.Property?.CanHaveKeyframes() ?? false )
-		{
-			Curve = Track.Track.ReadKeyframes() ?? KeyframeCurve.Create( Track.Track.PropertyType );
-
-			foreach ( var keyframe in Curve )
-			{
-				_ = new DopeHandle( this )
-				{
-					Time = keyframe.Time,
-					Value = keyframe.Value
-				};
-			}
-		}
-
-		PositionHandles();
-	}
-
-	private void UpdateBlockPreviews()
+	public void UpdateBlockPreviews()
 	{
 		if ( Visible && _canCreatePreview is not false )
 		{
@@ -191,26 +99,5 @@ public partial class DopesheetTrack : GraphicsItem
 		{
 			ClearBlockPreviews();
 		}
-	}
-
-	/// <summary>
-	/// Write from this sheet to the target
-	/// </summary>
-	public void Write()
-	{
-		if ( Curve is null ) return;
-
-		Curve.Clear();
-
-		foreach ( var handle in Handles )
-		{
-			Curve.SetKeyframe( handle.Time, handle.Value );
-		}
-
-		Track.Track.WriteKeyframes( Curve );
-
-		Session.Current.ClipModified();
-
-		UpdateBlockPreviews();
 	}
 }

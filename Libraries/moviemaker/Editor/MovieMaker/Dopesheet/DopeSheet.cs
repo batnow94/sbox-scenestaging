@@ -3,7 +3,7 @@ using Sandbox.MovieMaker;
 
 namespace Editor.MovieMaker;
 
-public class TrackDopesheet : GraphicsView
+public class DopeSheet : GraphicsView
 {
 	public static class Colors
 	{
@@ -20,7 +20,7 @@ public class TrackDopesheet : GraphicsView
 	private CurrentPointerItem _currentPointerItem;
 	private CurrentPointerItem _previewPointerItem;
 
-	public TrackDopesheet( TrackListWidget timelineTracklist )
+	public DopeSheet( TrackListWidget timelineTracklist )
 	{
 		this.tracklist = timelineTracklist;
 		MinimumWidth = 256;
@@ -40,7 +40,7 @@ public class TrackDopesheet : GraphicsView
 		FocusMode = FocusMode.TabOrClickOrWheel;
 
 		var bg = new Pixmap( 8 );
-		bg.Clear( TrackDopesheet.Colors.Background );
+		bg.Clear( DopeSheet.Colors.Background );
 
 		SetBackgroundImage( bg );
 	}
@@ -122,14 +122,13 @@ public class TrackDopesheet : GraphicsView
 
 			if ( track.Channel is null )
 			{
-				track.Channel = new DopesheetTrack( track );
+				track.Channel = new DopeSheetTrack( track );
 				Add( track.Channel );
 
-				track.Channel.Read();
+				Session.EditMode?.TrackAdded( track.Channel );
 			}
 
 			track.UpdateChannelPosition();
-			track.Channel.PositionHandles();
 		}
 
 		Update();
@@ -185,6 +184,10 @@ public class TrackDopesheet : GraphicsView
 
 		DragType = DragTypes.None;
 
+		Session.EditMode?.MousePress( e );
+
+		if ( e.Accepted ) return;
+
 		if ( e.ButtonState == MouseButtons.Left )
 		{
 			DragType = DragTypes.SelectionRect;
@@ -198,83 +201,47 @@ public class TrackDopesheet : GraphicsView
 		}
 	}
 
+	protected override void OnMouseReleased( MouseEvent e )
+	{
+		base.OnMouseReleased( e );
+
+		Session.EditMode?.MouseRelease( e );
+	}
+
 	protected override void OnKeyPress( KeyEvent e )
 	{
-		if ( e.Key == KeyCode.Left )
-		{
-			foreach ( var h in SelectedItems.OfType<DopeHandle>() )
-			{
-				h.Nudge( e.HasShift ? -1.0f : -0.1f );
-			}
+		base.OnKeyPress( e );
 
-			e.Accepted = true;
-			tracklist.WriteTracks();
-			return;
-		}
+		Session.EditMode?.KeyPress( e );
 
-		if ( e.Key == KeyCode.Right )
-		{
-			foreach ( var h in SelectedItems.OfType<DopeHandle>() )
-			{
-				h.Nudge( e.HasShift ? 1.0f : 0.1f );
-			}
-
-			e.Accepted = true;
-			tracklist.WriteTracks();
-			return;
-		}
+		if ( e.Accepted ) return;
 
 		if ( e.Key == KeyCode.Shift )
 		{
 			e.Accepted = true;
 			Session.SetPreviewPointer( Session.PixelsToTime( ToScene( lastpos ).x ) );
-			return;
 		}
-
-		base.OnKeyPress( e );
 	}
 
-	record struct CopiedHandle( Guid track, float time, object value );
-	static List<CopiedHandle> copied;
+	protected override void OnKeyRelease( KeyEvent e )
+	{
+		base.OnKeyRelease( e );
+
+		Session.EditMode?.KeyRelease( e );
+	}
 
 	public void OnCopy()
 	{
-		copied = new();
-
-		foreach ( var handle in SelectedItems.OfType<DopeHandle>() )
-		{
-			copied.Add( new CopiedHandle( handle.Track.Track.Track.Id, handle.Time, handle.Value ) );
-		}
+		Session.EditMode?.Copy();
 	}
 
 	public void OnPaste()
 	{
-		if ( copied is null || copied.Count == 0 )
-			return;
-
-		var pastePointer = Session.CurrentPointer;
-		pastePointer -= copied.Min( x => x.time );
-
-		foreach ( var entry in copied )
-		{
-			var track = tracklist.Tracks.FirstOrDefault( x => x.Track.Id == entry.track );
-			if ( track is null ) continue;
-
-			track.AddKey( entry.time + pastePointer, entry.value );
-		}
-
-		tracklist.WriteTracks();
+		Session.EditMode?.Paste();
 	}
-
 
 	public void OnDelete()
 	{
-		foreach ( var h in SelectedItems.OfType<DopeHandle>() )
-		{
-			h.Destroy();
-			h.Track?.Update();
-		}
-
-		tracklist.WriteTracks();
+		Session.EditMode?.Delete();
 	}
 }

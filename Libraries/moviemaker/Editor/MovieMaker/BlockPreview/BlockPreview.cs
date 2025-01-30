@@ -6,7 +6,7 @@ namespace Editor.MovieMaker;
 
 public abstract partial class BlockPreview : GraphicsItem
 {
-	public new DopesheetTrack Parent { get; private set; } = null!;
+	public new DopeSheetTrack Parent { get; private set; } = null!;
 	public MovieBlock Block { get; set; } = null!;
 
 	protected MovieTrack Track => Block.Track;
@@ -14,7 +14,7 @@ public abstract partial class BlockPreview : GraphicsItem
 	protected float StartTime => Block.StartTime;
 	protected float Duration => Block.Duration ?? Track.Clip.Duration - StartTime;
 
-	private void Initialize( DopesheetTrack parent, MovieBlock block )
+	private void Initialize( DopeSheetTrack parent, MovieBlock block )
 	{
 		base.Parent = Parent = parent;
 
@@ -24,7 +24,7 @@ public abstract partial class BlockPreview : GraphicsItem
 
 	protected override void OnPaint()
 	{
-		Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
+		Paint.SetBrushAndPen( DopeSheet.Colors.ChannelBackground );
 		Paint.DrawRect( LocalRect );
 	}
 }

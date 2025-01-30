@@ -66,7 +66,7 @@ public class ScrubberWidget : Widget
 	{
 		var duration = Session.Clip.Duration;
 
-		Paint.SetBrushAndPen( TrackDopesheet.Colors.Background );
+		Paint.SetBrushAndPen( DopeSheet.Colors.Background );
 		Paint.DrawRect( LocalRect );
 
 		// Darker background for the clip duration
@@ -74,7 +74,7 @@ public class ScrubberWidget : Widget
 		var startX = ToPixels( 0f );
 		var endX = ToPixels( duration );
 
-		Paint.SetBrushAndPen( TrackDopesheet.Colors.ChannelBackground );
+		Paint.SetBrushAndPen( DopeSheet.Colors.ChannelBackground );
 		Paint.DrawRect( new Rect( new Vector2( startX, LocalRect.Top ), new Vector2( endX - startX, LocalRect.Height ) ) );
 
 		Paint.Pen = Color.White.WithAlpha( 0.1f );

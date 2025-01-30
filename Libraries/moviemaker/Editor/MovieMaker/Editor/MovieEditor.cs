@@ -37,7 +37,7 @@ public class MovieEditor : Widget
 			player.EmbeddedClip ??= new MovieClip();
 		}
 
-		Session = new Session();
+		Session = new Session { Editor = this };
 		Session.SetPlayer( player );
 		Session.Current = Session;
 
@@ -45,6 +45,8 @@ public class MovieEditor : Widget
 		Toolbar = Layout.Add( new ToolbarWidget( this ) );
 		ScrubBar = Layout.Add( new ScrubberWidget( this ) );
 		TrackList = Layout.Add( new TrackListWidget( this ) );
+
+		Session.SetEditMode( EditMode.DefaultType );
 	}
 
 	void CloseSession()

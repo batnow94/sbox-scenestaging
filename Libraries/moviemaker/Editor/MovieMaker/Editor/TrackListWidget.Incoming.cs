@@ -9,7 +9,6 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 {
 	void EditorEvent.ISceneEdited.GameObjectPreEdited( GameObject go, string propertyName )
 	{
-		if ( !Session.KeyframeRecording ) return;
 		if ( !CanRecord( typeof( GameObject ), ref propertyName ) ) return;
 
 		try
@@ -19,7 +18,7 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 			// make sure the track widget exists for this track
 			RebuildTracksIfNeeded();
 
-			Record( targetTrack );
+			PreChange( targetTrack );
 		}
 		catch
 		{
@@ -29,7 +28,6 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 
 	void EditorEvent.ISceneEdited.ComponentPreEdited( Component cmp, string propertyName )
 	{
-		if ( !Session.KeyframeRecording ) return;
 		if ( !CanRecord( cmp.GetType(), ref propertyName ) ) return;
 
 		try
@@ -39,7 +37,7 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 			// make sure the track widget exists for this track
 			RebuildTracksIfNeeded();
 
-			Record( targetTrack );
+			PreChange( targetTrack );
 		}
 		catch
 		{
@@ -53,7 +51,7 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 
 		if ( Session.Player.GetTrack( go, propertyName ) is not { } targetTrack ) return;
 
-		Record( targetTrack );
+		PostChange( targetTrack );
 	}
 
 	void EditorEvent.ISceneEdited.ComponentEdited( Component cmp, string propertyName )
@@ -61,7 +59,7 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 		if ( !CanRecord( cmp.GetType(), ref propertyName ) ) return;
 		if ( Session.Player.GetTrack( cmp, propertyName ) is not { } targetTrack ) return;
 
-		Record( targetTrack );
+		PostChange( targetTrack );
 	}
 
 	private string NormalizeGameObjectProperty( string propertyName )
@@ -99,31 +97,36 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 		return true;
 	}
 
-	private bool Record( MovieTrack track )
+	private bool PreChange( MovieTrack track )
+	{
+		if ( Session.EditMode?.PreChange( track ) is true )
+		{
+			NoteInteraction( track );
+			return true;
+		}
+
+		return true;
+	}
+
+	private bool PostChange( MovieTrack track )
+	{
+		if ( Session.EditMode?.PostChange( track ) is true )
+		{
+			NoteInteraction( track );
+			return true;
+		}
+
+		return true;
+	}
+
+	private void NoteInteraction( MovieTrack track )
 	{
 		var trackWidget = FindTrack( track );
 
 		Assert.NotNull( trackWidget, "Track should have been created" );
 
-		if ( Session.KeyframeRecording )
-		{
-			if ( track.Blocks.Count == 0 )
-			{
-				trackWidget.AddKey( 0f );
-			}
-
-			trackWidget.AddKey( Session.CurrentPointer );
-		}
-		else if ( !trackWidget.UpdateKey( Session.CurrentPointer ) )
-		{
-			return false;
-		}
-
-		trackWidget.Write();
-
-		ScrollArea.MakeVisible( trackWidget );
 		trackWidget.NoteInteraction();
 
-		return true;
+		ScrollArea.MakeVisible( trackWidget );
 	}
 }

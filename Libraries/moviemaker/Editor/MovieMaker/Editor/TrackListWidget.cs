@@ -13,7 +13,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 
 	Layout TrackList;
 
-	public TrackDopesheet DopeSheet { get; }
+	public DopeSheet DopeSheet { get; }
 
 	public Widget LeftWidget { get; init; }
 	public Widget RightWidget { get; init; }
@@ -57,7 +57,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 			splitter.AddWidget( RightWidget );
 
 			RightWidget.Layout = Layout.Column();
-			DopeSheet = RightWidget.Layout.Add( new TrackDopesheet( this ), 1 );
+			DopeSheet = RightWidget.Layout.Add( new DopeSheet( this ), 1 );
 		}
 
 		splitter.SetCollapsible( 0, false );
@@ -91,6 +91,14 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 	/// </summary>
 	void RebuildTracks()
 	{
+		foreach ( var track in Tracks )
+		{
+			if ( track.Channel is { } channel )
+			{
+				Session.EditMode?.TrackRemoved( channel );
+			}
+		}
+
 		TrackList.Clear( true );
 		Tracks.Clear();
 
@@ -199,19 +207,8 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 	{
 		Paint.Antialiasing = true;
 
-		Paint.SetBrushAndPen( TrackDopesheet.Colors.Background );
+		Paint.SetBrushAndPen( DopeSheet.Colors.Background );
 		Paint.DrawRect( LocalRect );
-	}
-
-	/// <summary>
-	/// Write all tracks from the editor to the clip
-	/// </summary>
-	public void WriteTracks()
-	{
-		foreach ( var t in Tracks )
-		{
-			t.Write();
-		}
 	}
 
 	public void OnCopy()
@@ -230,4 +227,3 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		DopeSheet?.OnDelete();
 	}
 }
-

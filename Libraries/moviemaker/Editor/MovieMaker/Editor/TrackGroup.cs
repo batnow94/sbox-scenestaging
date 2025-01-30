@@ -77,7 +77,7 @@ file class CollapseButton : Button
 
 	protected override void OnPaint()
 	{
-		Paint.SetBrushAndPen( Extensions.PaintSelectColor( TrackDopesheet.Colors.Background,
+		Paint.SetBrushAndPen( Extensions.PaintSelectColor( DopeSheet.Colors.Background,
 			Theme.ControlBackground.Lighten( 0.5f ), Theme.Primary ) );
 		Paint.DrawRect( LocalRect, 4f );
 
