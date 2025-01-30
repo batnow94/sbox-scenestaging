@@ -8,8 +8,6 @@ public class DopeHandle : GraphicsItem
 	public float Time { get; set; }
 	public object Value { get; set; }
 
-	public override Rect BoundingRect => base.BoundingRect.Grow( 0f, 0f, 32f, 0f );
-
 	private DopesheetTrack track;
 
 	public DopesheetTrack Track => track;

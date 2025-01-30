@@ -127,13 +127,19 @@ public class ScrubberWidget : Widget
 			}
 		}
 
-		// Cursor
-		{
-			var pos = ToPixels( Session.CurrentPointer );
-			Paint.SetBrushAndPen( Theme.Yellow );
-			Extensions.PaintBookmarkDown( pos, Height, 4, 4, 12 );
-		}
+		DrawPointer( Session.CurrentPointer, Theme.Yellow );
 
+		if ( Session.PreviewPointer is { } preview )
+		{
+			DrawPointer( preview, Theme.Blue.WithAlpha( 0.5f ) );
+		}
+	}
+
+	private void DrawPointer( float time, Color color )
+	{
+		var pos = ToPixels( time );
+		Paint.SetBrushAndPen( color );
+		Extensions.PaintBookmarkDown( pos, Height, 4, 4, 12 );
 	}
 
 	int lastState;
@@ -142,7 +148,7 @@ public class ScrubberWidget : Widget
 	[EditorEvent.Frame]
 	public void Frame()
 	{
-		var state = HashCode.Combine( Session.TimeVisible, Session.TimeOffset, Session.CurrentPointer, Session.Clip?.Duration );
+		var state = HashCode.Combine( Session.TimeVisible, Session.TimeOffset, Session.CurrentPointer, Session.PreviewPointer, Session.Clip?.Duration );
 
 		if ( state != lastState )
 		{

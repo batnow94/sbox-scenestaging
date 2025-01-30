@@ -22,7 +22,16 @@ public sealed class Session
 	public bool Loop { get; set; } = true;
 	public float TimeOffset = 0;
 	public float TimeVisible = 100.0f;
+
+	/// <summary>
+	/// When editing keyframes, what time are we changing.
+	/// </summary>
 	public float CurrentPointer { get; private set; }
+
+	/// <summary>
+	/// What time are we previewing (when holding shift and moving mouse over timeline).
+	/// </summary>
+	public float? PreviewPointer { get; private set; }
 
 	public bool HasUnsavedChanges { get; private set; }
 
@@ -70,22 +79,34 @@ public sealed class Session
 		}
 	}
 
-	public Action<float> OnPointerChanged;
+	public event Action<float> PointerChanged;
+	public event Action<float?> PreviewChanged;
 
 	public void SetCurrentPointer( float time )
 	{
-		// gonna be using Json.* to lookup - so needs the session
-		using ( SceneEditorSession.Active.Scene.Push() )
-		{
-			CurrentPointer = time;
+		CurrentPointer = Math.Max( 0, time );
 
-			if ( CurrentPointer < 0 )
-				CurrentPointer = 0;
+		PointerChanged?.Invoke( CurrentPointer );
 
-			OnPointerChanged?.Invoke( CurrentPointer );
+		Player.ApplyFrame( CurrentPointer );
+	}
 
-			Player.ApplyFrame( CurrentPointer );
-		}
+	public void SetPreviewPointer( float time )
+	{
+		PreviewPointer = Math.Max( 0, time );
+
+		PreviewChanged?.Invoke( PreviewPointer );
+
+		Player.ApplyFrame( PreviewPointer.Value );
+	}
+
+	public void ClearPreviewPointer()
+	{
+		PreviewPointer = null;
+
+		PreviewChanged?.Invoke( PreviewPointer );
+
+		Player.ApplyFrame( CurrentPointer );
 	}
 
 	public void Play()

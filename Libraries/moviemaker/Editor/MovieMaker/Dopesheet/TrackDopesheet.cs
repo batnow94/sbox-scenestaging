@@ -16,7 +16,9 @@ public class TrackDopesheet : GraphicsView
 	private Session Session => tracklist.Session;
 
 	GridItem gridItem;
-	CurrentPointerItem currentPointerItem;
+
+	private CurrentPointerItem _currentPointerItem;
+	private CurrentPointerItem _previewPointerItem;
 
 	public TrackDopesheet( TrackListWidget timelineTracklist )
 	{
@@ -26,10 +28,14 @@ public class TrackDopesheet : GraphicsView
 		gridItem = new GridItem();
 		Add( gridItem );
 
-		currentPointerItem = new CurrentPointerItem();
-		Add( currentPointerItem );
+		_currentPointerItem = new CurrentPointerItem( Theme.Yellow );
+		Add( _currentPointerItem );
 
-		Session.OnPointerChanged += UpdatePointerPosition;
+		_previewPointerItem = new CurrentPointerItem( Theme.Blue );
+		Add( _previewPointerItem );
+
+		Session.PointerChanged += UpdateCurrentPosition;
+		Session.PreviewChanged += UpdatePreviewPosition;
 
 		FocusMode = FocusMode.TabOrClickOrWheel;
 
@@ -43,7 +49,8 @@ public class TrackDopesheet : GraphicsView
 	{
 		base.OnDestroyed();
 
-		Session.OnPointerChanged -= UpdatePointerPosition;
+		Session.PointerChanged -= UpdateCurrentPosition;
+		Session.PreviewChanged -= UpdatePreviewPosition;
 	}
 
 	int lastState;
@@ -59,6 +66,11 @@ public class TrackDopesheet : GraphicsView
 			UpdateTracks();
 			Update();
 		}
+
+		if ( (Application.KeyboardModifiers & KeyboardModifiers.Shift) == 0 && Session.PreviewPointer is not null )
+		{
+			Session.ClearPreviewPointer();
+		}
 	}
 
 	protected override void OnResize()
@@ -68,10 +80,23 @@ public class TrackDopesheet : GraphicsView
 		UpdateTracks();
 	}
 
-	void UpdatePointerPosition( float time )
+	private void UpdateCurrentPosition( float time )
 	{
-		currentPointerItem.Position = new Vector2( Session.TimeToPixels( time ), 0 );
-		currentPointerItem.Size = new Vector2( 1, Height );
+		_currentPointerItem.Position = new Vector2( Session.TimeToPixels( time ), 0 );
+		_currentPointerItem.Size = new Vector2( 1, Height );
+	}
+
+	private void UpdatePreviewPosition( float? time )
+	{
+		if ( time is not null )
+		{
+			_previewPointerItem.Position = new Vector2( Session.TimeToPixels( time.Value ), 0 );
+			_previewPointerItem.Size = new Vector2( 1, Height );
+		}
+		else
+		{
+			_previewPointerItem.Position = new Vector2( -50000f, 0f );
+		}
 	}
 
 	void UpdateSceneFrame()
@@ -81,7 +106,8 @@ public class TrackDopesheet : GraphicsView
 		gridItem.SceneRect = SceneRect;
 		gridItem.Update();
 
-		UpdatePointerPosition( Session.CurrentPointer );
+		UpdateCurrentPosition( Session.CurrentPointer );
+		UpdatePreviewPosition( Session.PreviewPointer );
 	}
 
 	public void UpdateTracks()
@@ -138,9 +164,16 @@ public class TrackDopesheet : GraphicsView
 			tracklist.ScrollBy( delta.x );
 		}
 
+		var time = Session.PixelsToTime( ToScene( e.LocalPosition ).x );
+
 		if ( e.ButtonState == MouseButtons.Right )
 		{
-			Session.SetCurrentPointer( Session.PixelsToTime( ToScene( e.LocalPosition ).x ) );
+			Session.SetCurrentPointer( time );
+		}
+
+		if ( e.HasShift )
+		{
+			Session.SetPreviewPointer( time );
 		}
 
 		lastpos = e.LocalPosition;
@@ -163,12 +196,6 @@ public class TrackDopesheet : GraphicsView
 			Session.SetCurrentPointer( Session.PixelsToTime( ToScene( e.LocalPosition ).x ) );
 			return;
 		}
-	}
-
-	protected override void OnMouseReleased( MouseEvent e )
-	{
-		base.OnMouseReleased( e );
-
 	}
 
 	protected override void OnKeyPress( KeyEvent e )
@@ -194,6 +221,13 @@ public class TrackDopesheet : GraphicsView
 
 			e.Accepted = true;
 			tracklist.WriteTracks();
+			return;
+		}
+
+		if ( e.Key == KeyCode.Shift )
+		{
+			e.Accepted = true;
+			Session.SetPreviewPointer( Session.PixelsToTime( ToScene( lastpos ).x ) );
 			return;
 		}
 

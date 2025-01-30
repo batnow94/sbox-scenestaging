@@ -91,6 +91,8 @@ public sealed partial class MoviePlayer : Component
 		if ( MovieClip is null || _sceneRefMap.Count == 0 ) return;
 		if ( time < 0f || time > MovieClip.Duration ) return;
 
+		using var sceneScope = Scene.Push();
+
 		foreach ( var track in MovieClip.RootTracks )
 		{
 			ApplyFrame( track, time );
