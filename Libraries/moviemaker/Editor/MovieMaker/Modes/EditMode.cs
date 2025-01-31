@@ -54,6 +54,11 @@ public abstract class EditMode
 	protected IEnumerable<GraphicsItem> SelectedItems => DopeSheet.SelectedItems;
 	protected TrackListWidget TrackList => Session.Editor.TrackList;
 
+	/// <summary>
+	/// Can we create new tracks when properties are edited in the scene?
+	/// </summary>
+	public virtual bool AllowTrackCreation => false;
+
 	internal void Enable( Session session )
 	{
 		Session = session;

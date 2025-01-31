@@ -17,6 +17,8 @@ internal sealed class KeyframeEditMode : EditMode
 	/// </summary>
 	public bool KeyframeRecording { get; set; }
 
+	public override bool AllowTrackCreation => KeyframeRecording;
+
 	private TrackKeyframes? GetKeyframes( TrackWidget? track )
 	{
 		return track is not null ? GetKeyframes( track.Channel ) : null;

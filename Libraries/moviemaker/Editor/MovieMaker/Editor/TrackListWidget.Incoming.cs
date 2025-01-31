@@ -1,65 +1,42 @@
 ﻿using Sandbox.Diagnostics;
-using System.Linq;
 using Sandbox.MovieMaker;
 
 namespace Editor.MovieMaker;
 
+#nullable enable
 
 public partial class TrackListWidget : EditorEvent.ISceneEdited
 {
-	void EditorEvent.ISceneEdited.GameObjectPreEdited( GameObject go, string propertyName )
+	void EditorEvent.ISceneEdited.GameObjectPreEdited( GameObject go, string propertyPath )
 	{
-		if ( !CanRecord( typeof( GameObject ), ref propertyName ) ) return;
-
-		try
+		if ( GetOrCreateTrack( go, propertyPath ) is { } track )
 		{
-			var targetTrack = Session.Player.GetOrCreateTrack( go, propertyName );
-
-			// make sure the track widget exists for this track
-			RebuildTracksIfNeeded();
-
-			PreChange( targetTrack );
-		}
-		catch
-		{
-			// Not an editable track
+			PreChange( track );
 		}
 	}
 
-	void EditorEvent.ISceneEdited.ComponentPreEdited( Component cmp, string propertyName )
+	void EditorEvent.ISceneEdited.ComponentPreEdited( Component cmp, string propertyPath )
 	{
-		if ( !CanRecord( cmp.GetType(), ref propertyName ) ) return;
-
-		try
+		if ( GetOrCreateTrack( cmp, propertyPath ) is { } track )
 		{
-			var targetTrack = Session.Player.GetOrCreateTrack( cmp, propertyName );
-
-			// make sure the track widget exists for this track
-			RebuildTracksIfNeeded();
-
-			PreChange( targetTrack );
-		}
-		catch
-		{
-			// Not an editable track
+			PreChange( track );
 		}
 	}
 
-	void EditorEvent.ISceneEdited.GameObjectEdited( GameObject go, string propertyName )
+	void EditorEvent.ISceneEdited.GameObjectEdited( GameObject go, string propertyPath )
 	{
-		if ( !CanRecord( typeof(GameObject), ref propertyName ) ) return;
-
-		if ( Session.Player.GetTrack( go, propertyName ) is not { } targetTrack ) return;
-
-		PostChange( targetTrack );
+		if ( GetOrCreateTrack( go, propertyPath ) is { } track )
+		{
+			PostChange( track );
+		}
 	}
 
-	void EditorEvent.ISceneEdited.ComponentEdited( Component cmp, string propertyName )
+	void EditorEvent.ISceneEdited.ComponentEdited( Component cmp, string propertyPath )
 	{
-		if ( !CanRecord( cmp.GetType(), ref propertyName ) ) return;
-		if ( Session.Player.GetTrack( cmp, propertyName ) is not { } targetTrack ) return;
-
-		PostChange( targetTrack );
+		if ( GetOrCreateTrack( cmp, propertyPath ) is { } track )
+		{
+			PostChange( track );
+		}
 	}
 
 	private string NormalizeGameObjectProperty( string propertyName )
@@ -74,27 +51,77 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 		return propertyName;
 	}
 
-	private bool CanRecord( Type targetType, ref string propertyName )
+	private bool CanRecord( Type targetType, ref string propertyPath )
 	{
 		if ( targetType == typeof(GameObject) )
 		{
-			propertyName = NormalizeGameObjectProperty( propertyName );
+			propertyPath = NormalizeGameObjectProperty( propertyPath );
 		}
 
-		if ( propertyName[^2..] is ".x" or ".y" or ".z" or ".w" )
+		if ( propertyPath[^2..] is ".x" or ".y" or ".z" or ".w" )
 		{
-			propertyName = propertyName[..^2];
+			propertyPath = propertyPath[..^2];
 		}
 
 		if ( targetType == typeof(GameObject))
 		{
-			if ( propertyName is not ("LocalScale" or "LocalRotation" or "LocalPosition") )
+			if ( propertyPath is not ("LocalScale" or "LocalRotation" or "LocalPosition") )
 			{
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	private MovieTrack? GetOrCreateTrack( GameObject go, string propertyPath )
+	{
+		if ( !CanRecord( typeof(GameObject), ref propertyPath ) ) return null;
+
+		try
+		{
+			if ( Session.EditMode?.AllowTrackCreation is not true )
+			{
+				return Session.Player.GetTrack( go, propertyPath );
+			}
+
+			var track = Session.Player.GetOrCreateTrack( go, propertyPath );
+
+			// Make sure the track widget exists for this track
+			RebuildTracksIfNeeded();
+
+			return track;
+		}
+		catch
+		{
+			// Track not editable
+			return null;
+		}
+	}
+
+	private MovieTrack? GetOrCreateTrack( Component cmp, string propertyPath )
+	{
+		if ( !CanRecord( cmp.GetType(), ref propertyPath ) ) return null;
+
+		try
+		{
+			if ( Session.EditMode?.AllowTrackCreation is not true )
+			{
+				return Session.Player.GetTrack( cmp, propertyPath );
+			}
+
+			var track = Session.Player.GetOrCreateTrack( cmp, propertyPath );
+
+			// Make sure the track widget exists for this track
+			RebuildTracksIfNeeded();
+
+			return track;
+		}
+		catch
+		{
+			// Track not editable
+			return null;
+		}
 	}
 
 	private bool PreChange( MovieTrack track )
@@ -105,7 +132,7 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	private bool PostChange( MovieTrack track )
@@ -116,7 +143,7 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	private void NoteInteraction( MovieTrack track )
