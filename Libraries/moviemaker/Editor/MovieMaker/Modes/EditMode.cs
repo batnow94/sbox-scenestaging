@@ -45,6 +45,28 @@ public abstract class EditMode
 
 			return btn;
 		}
+
+		public IconButton AddToggle( KeyframeInterpolation value, Func<bool> getState, Action<bool> setState )
+		{
+			var entry = EditorTypeLibrary.GetEnumDescription( typeof(KeyframeInterpolation) )
+				.FirstOrDefault( x => x.IntegerValue == (long)value );
+
+			var btn = new InterpolationButton( value )
+			{
+				ToolTip = entry.Title ?? value.ToString().ToTitleCase(),
+				IconSize = 14f,
+				IsToggle = true,
+				ForegroundActive = Theme.Primary
+			};
+
+			btn.Bind( "IsActive" ).From( getState, setState );
+
+			toolbar.Add( btn );
+
+			return btn;
+		}
+
+		public void AddSeparator() => toolbar.AddSeparator();
 	}
 
 	protected Session Session { get; private set; } = null!;

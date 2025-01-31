@@ -65,6 +65,7 @@ public class ToolbarWidget : Widget
 		}
 
 		EditModeControls = Layout.AddRow();
+		EditModeControls.Spacing = 2;
 
 		Layout.AddStretchCell();
 	}

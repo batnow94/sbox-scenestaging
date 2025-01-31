@@ -4,10 +4,19 @@ namespace Editor.MovieMaker;
 
 public enum KeyframeInterpolation
 {
+	[Title( "None" )]
 	None,
+
+	[Title( "Linear" )]
 	Linear,
+
+	[Title( "Ease In" )]
 	QuadraticIn,
+
+	[Title( "Ease Out" )]
 	QuadraticOut,
+
+	[Title( "Ease In Out" )]
 	QuadraticInOut
 }
 

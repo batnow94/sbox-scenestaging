@@ -46,6 +46,17 @@ internal sealed class KeyframeEditMode : EditMode
 			x => KeyframeRecording = x );
 
 		btn.ForegroundActive = Theme.Red;
+
+		Toolbar.AddSeparator();
+
+		foreach ( var interpolation in Enum.GetValues<KeyframeInterpolation>() )
+		{
+			Toolbar.AddToggle( interpolation,
+				() => SelectedHandles.Any()
+					? SelectedHandles.All( x => x.Interpolation == interpolation )
+					: DefaultInterpolation == interpolation,
+				_ => SetInterpolation( interpolation ) );
+		}
 	}
 
 	protected override void OnTrackAdded( DopeSheetTrack track )

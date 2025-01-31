@@ -201,7 +201,7 @@ public sealed class Session
 		{
 			var property = Player.GetSerialized().GetProperty( nameof(MoviePlayer.EmbeddedClip) );
 
-			SceneEditorSession.Active.RecordChange( property );
+			property.SetValue( Clip );
 			return;
 		}
 
