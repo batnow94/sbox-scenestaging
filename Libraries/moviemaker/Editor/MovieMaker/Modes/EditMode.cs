@@ -65,6 +65,8 @@ public abstract class EditMode
 		DopeSheet = session.Editor.TrackList.DopeSheet;
 		Toolbar = new( Session.Editor.Toolbar.EditModeControls );
 
+		EditorShortcuts.Register( this, DopeSheet );
+
 		OnEnable();
 
 		foreach ( var track in DopeSheet.Items.OfType<DopeSheetTrack>() )
@@ -83,6 +85,8 @@ public abstract class EditMode
 		}
 
 		OnDisable();
+
+		EditorShortcuts.Unregister( this );
 
 		Session = null!;
 	}

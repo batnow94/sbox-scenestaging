@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Sandbox.MovieMaker;
+using System.Linq;
 
 namespace Editor.MovieMaker;
 
@@ -16,6 +17,7 @@ internal sealed class KeyframeEditMode : EditMode
 	/// If true, we automatically record new keyframes when properties are changed
 	/// </summary>
 	public bool KeyframeRecording { get; set; }
+	public KeyframeInterpolation DefaultInterpolation { get; private set; } = KeyframeInterpolation.QuadraticInOut;
 
 	public override bool AllowTrackCreation => KeyframeRecording;
 
@@ -48,7 +50,7 @@ internal sealed class KeyframeEditMode : EditMode
 
 	protected override void OnTrackAdded( DopeSheetTrack track )
 	{
-		var keyframes = new TrackKeyframes( track );
+		var keyframes = new TrackKeyframes( track, this );
 
 		_keyframeMap[track] = keyframes;
 
@@ -65,34 +67,56 @@ internal sealed class KeyframeEditMode : EditMode
 		}
 	}
 
-	protected override void OnKeyPress( KeyEvent e )
+	[Shortcut( "keyframe-edit.interp-none", "0" )]
+	public void SetInterpolationNone() => SetInterpolation( KeyframeInterpolation.None );
+
+	[Shortcut( "keyframe-edit.interp-linear", "1" )]
+	public void SetInterpolationLinear() => SetInterpolation( KeyframeInterpolation.Linear );
+
+	[Shortcut( "keyframe-edit.interp-in", "2" )]
+	public void SetInterpolationIn() => SetInterpolation( KeyframeInterpolation.QuadraticIn );
+
+	[Shortcut( "keyframe-edit.interp-out", "3" )]
+	public void SetInterpolationOut() => SetInterpolation( KeyframeInterpolation.QuadraticOut );
+
+	[Shortcut( "keyframe-edit.interp-in-out", "4" )]
+	public void SetInterpolationInOut() => SetInterpolation( KeyframeInterpolation.QuadraticInOut );
+
+	public void SetInterpolation( KeyframeInterpolation value )
 	{
-		if ( e.Key == KeyCode.Left )
-		{
-			foreach ( var h in SelectedHandles )
-			{
-				h.Nudge( e.HasShift ? -1.0f : -0.1f );
-			}
+		DefaultInterpolation = value;
 
-			e.Accepted = true;
-			WriteTracks( SelectedTracks );
-			return;
+		foreach ( var h in SelectedHandles )
+		{
+			h.Interpolation = value;
 		}
 
-		if ( e.Key == KeyCode.Right )
-		{
-			foreach ( var h in SelectedHandles )
-			{
-				h.Nudge( e.HasShift ? 1.0f : 0.1f );
-			}
-
-			e.Accepted = true;
-			WriteTracks( SelectedTracks );
-			return;
-		}
+		WriteTracks( SelectedTracks );
 	}
 
-	private record struct CopiedHandle( Guid Track, float Time, object Value );
+	[Shortcut( "keyframe-edit.nudge-left", "LEFT" )]
+	public void NudgeLeft()
+	{
+		Nudge((Application.KeyboardModifiers & KeyboardModifiers.Shift) != 0 ? -1.0f : -0.1f );
+	}
+
+	[Shortcut( "keyframe-edit.nudge-right", "RIGHT" )]
+	public void NudgeRight()
+	{
+		Nudge( (Application.KeyboardModifiers & KeyboardModifiers.Shift) != 0 ? 1.0f : 0.1f );
+	}
+
+	private void Nudge( float amount )
+	{
+		foreach ( var h in SelectedHandles )
+		{
+			h.Nudge( amount );
+		}
+
+		WriteTracks( SelectedTracks );
+	}
+
+	private record struct CopiedHandle( Guid Track, float Time, object? Value, KeyframeInterpolation Interpolation );
 	private static List<CopiedHandle>? Copied { get; set; }
 
 	protected override void OnCopy()
@@ -101,7 +125,7 @@ internal sealed class KeyframeEditMode : EditMode
 
 		foreach ( var handle in SelectedHandles )
 		{
-			Copied.Add( new CopiedHandle( handle.Track.Track.Track.Id, handle.Time, handle.Value ) );
+			Copied.Add( new CopiedHandle( handle.Track.Track.Track.Id, handle.Time, handle.Value, handle.Interpolation ) );
 		}
 	}
 
@@ -120,7 +144,7 @@ internal sealed class KeyframeEditMode : EditMode
 			var track = TrackList.Tracks.FirstOrDefault( x => x.Track.Id == entry.Track );
 			if ( track is null || GetKeyframes( track ) is not { } keyframes ) continue;
 
-			keyframes.AddKey( entry.Time + pastePointer, entry.Value );
+			keyframes.AddKey( entry.Time + pastePointer, entry.Value, entry.Interpolation );
 
 			modified.Add( keyframes );
 		}
@@ -197,7 +221,7 @@ internal sealed class KeyframeEditMode : EditMode
 	}
 }
 
-public sealed class TrackKeyframes : IDisposable
+internal sealed class TrackKeyframes : IDisposable
 {
 	private static Dictionary<Type, Color> HandleColors { get; } = new()
 	{
@@ -211,12 +235,15 @@ public sealed class TrackKeyframes : IDisposable
 
 	public DopeSheetTrack DopeSheetTrack { get; }
 	public TrackWidget TrackWidget { get; }
+	public KeyframeEditMode EditMode { get; }
+
 	public Color HandleColor { get; private set; }
 
-	public TrackKeyframes( DopeSheetTrack track )
+	public TrackKeyframes( DopeSheetTrack track, KeyframeEditMode editMode )
 	{
 		DopeSheetTrack = track;
 		TrackWidget = track.Track;
+		EditMode = editMode;
 
 		HandleColor = Theme.Grey;
 
@@ -242,27 +269,28 @@ public sealed class TrackKeyframes : IDisposable
 
 	internal bool UpdateKey( float time ) => UpdateKey( time, TrackWidget.Property!.Value );
 
-	internal void AddKey( float time, object? value )
+	internal void AddKey( float time, object? value, KeyframeInterpolation? interpolation = null )
 	{
-		var h = FindKey( time ) ?? new KeyframeHandle( this );
+		var h = FindKey( time ) ?? new KeyframeHandle( this ) { Interpolation = EditMode.DefaultInterpolation };
 
-		UpdateKey( h, time, value );
+		UpdateKey( h, time, value, interpolation );
 	}
 
-	internal bool UpdateKey( float time, object? value )
+	internal bool UpdateKey( float time, object? value, KeyframeInterpolation? interpolation = null )
 	{
 		if ( FindKey( time ) is not { } h ) return false;
 
-		UpdateKey( h, time, value );
+		UpdateKey( h, time, value, interpolation );
 
 		return true;
 	}
 
-	private void UpdateKey( KeyframeHandle h, float time, object? value )
+	private void UpdateKey( KeyframeHandle h, float time, object? value, KeyframeInterpolation? interpolation )
 	{
 		//EditorUtility.PlayRawSound( "sounds/editor/add.wav" );
 		h.Time = time;
 		h.Value = value;
+		h.Interpolation = interpolation ?? h.Interpolation;
 
 		h.UpdatePosition();
 
@@ -290,7 +318,8 @@ public sealed class TrackKeyframes : IDisposable
 				_ = new KeyframeHandle( this )
 				{
 					Time = keyframe.Time,
-					Value = keyframe.Value
+					Value = keyframe.Value,
+					Interpolation = keyframe.Interpolation ?? Curve.Interpolation
 				};
 			}
 		}
@@ -309,7 +338,7 @@ public sealed class TrackKeyframes : IDisposable
 
 		foreach ( var handle in Handles )
 		{
-			Curve.SetKeyframe( handle.Time, handle.Value );
+			Curve.SetKeyframe( handle.Time, handle.Value, handle.Interpolation );
 		}
 
 		TrackWidget.Track.WriteKeyframes( Curve );

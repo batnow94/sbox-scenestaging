@@ -6,6 +6,8 @@ public enum KeyframeInterpolation
 {
 	None,
 	Linear,
+	QuadraticIn,
+	QuadraticOut,
 	QuadraticInOut
 }
 
@@ -58,6 +60,8 @@ public static partial class KeyframeExtensions
 	public static float Apply( this KeyframeInterpolation interpolation, float t ) => interpolation switch
 	{
 		KeyframeInterpolation.Linear => t,
+		KeyframeInterpolation.QuadraticIn => Easing.QuadraticIn( t ),
+		KeyframeInterpolation.QuadraticOut => Easing.QuadraticOut( t ),
 		KeyframeInterpolation.QuadraticInOut => Easing.QuadraticInOut( t ),
 		_ => 0f
 	};
