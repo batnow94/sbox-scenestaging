@@ -123,6 +123,10 @@ public abstract class EditMode
 	protected virtual void OnMousePress( MouseEvent e ) { }
 	internal void MouseRelease( MouseEvent e ) => OnMouseRelease( e );
 	protected virtual void OnMouseRelease( MouseEvent e ) { }
+	internal void MouseMove( MouseEvent e ) => OnMouseMove( e );
+	protected virtual void OnMouseMove( MouseEvent e ) { }
+	internal void MouseWheel( WheelEvent e ) => OnMouseWheel( e );
+	protected virtual void OnMouseWheel( WheelEvent e ) { }
 
 	internal void KeyPress( KeyEvent e ) => OnKeyPress( e );
 	protected virtual void OnKeyPress( KeyEvent e ) { }

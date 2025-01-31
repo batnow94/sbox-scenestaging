@@ -19,8 +19,8 @@ public sealed class Session
 
 	public bool Playing { get; set; }
 	public bool Loop { get; set; } = true;
-	public float TimeOffset = 0;
-	public float TimeVisible = 100.0f;
+	public float TimeOffset { get; private set; }
+	public float TimeVisible { get; private set; } = 100.0f;
 
 	/// <summary>
 	/// When editing keyframes, what time are we changing.
@@ -38,6 +38,11 @@ public sealed class Session
 
 	SmoothDeltaFloat SmoothZoom = new SmoothDeltaFloat { Value = 100.0f, Target = 100.0f, SmoothTime = 0.3f };
 	SmoothDeltaFloat SmoothPan = new SmoothDeltaFloat { Value = 0.0f, Target = 0f, SmoothTime = 0.3f };
+
+	/// <summary>
+	/// Invoked when the view pans or changes scale.
+	/// </summary>
+	public event Action? ViewChanged;
 
 	internal void SetPlayer( MoviePlayer player )
 	{
@@ -90,6 +95,8 @@ public sealed class Session
 			SmoothPan.Velocity = 0;
 			TimeOffset = SmoothPan.Target;
 		}
+
+		ViewChanged?.Invoke();
 	}
 
 	public event Action<float> PointerChanged;
@@ -169,11 +176,14 @@ public sealed class Session
 
 			var nd = TimeToPixels( TimeOffset ) - TimeToPixels( CurrentPointer );
 			ScrollBy( nd - d, false );
+
+			ViewChanged?.Invoke();
 		}
 
 		if ( SmoothPan.Update( RealTime.Delta ) )
 		{
 			TimeOffset = SmoothPan.Value;
+			ViewChanged?.Invoke();
 		}
 
 		return true;

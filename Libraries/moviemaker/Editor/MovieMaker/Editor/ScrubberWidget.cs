@@ -14,17 +14,12 @@ public class ScrubberWidget : Widget
 	public ScrubberWidget( MovieEditor timelineEditor, bool isTop ) : base( timelineEditor )
 	{
 		Session = timelineEditor.Session;
-		this.Editor = timelineEditor;
+		Editor = timelineEditor;
 		MinimumHeight = 24;
 		IsTop = isTop;
 
 		TranslucentBackground = false;
 		NoSystemBackground = false;
-	}
-
-	public override void OnDestroyed()
-	{
-		base.OnDestroyed();
 	}
 
 	protected override void OnMousePress( MouseEvent e )

@@ -43,6 +43,8 @@ public class DopeSheet : GraphicsView
 		bg.Clear( DopeSheet.Colors.Background );
 
 		SetBackgroundImage( bg );
+
+		Antialiasing = true;
 	}
 
 	public override void OnDestroyed()
@@ -145,10 +147,20 @@ public class DopeSheet : GraphicsView
 	{
 		base.OnWheel( e );
 
+		Session.EditMode?.MouseWheel( e );
+
+		// TODO: Can't check if event was accepted?
+
+		if ( e.HasShift )
+		{
+			return;
+		}
+
 		if ( GetAncestor<TrackListWidget>().OnCanvasWheel( e ) )
 		{
 			e.Accept();
 		}
+
 		return;
 	}
 
@@ -179,6 +191,8 @@ public class DopeSheet : GraphicsView
 		}
 
 		lastpos = e.LocalPosition;
+
+		Session.EditMode?.MouseMove( e );
 	}
 
 	protected override void OnMousePress( MouseEvent e )
