@@ -1,5 +1,4 @@
-﻿
-namespace Editor.MovieMaker;
+﻿namespace Editor.MovieMaker;
 
 /// <summary>
 /// A bar with times and notches on it
@@ -139,6 +138,8 @@ public class ScrubberWidget : Widget
 			}
 		}
 
+		Editor.Session.EditMode?.ScrubberPaint( this );
+
 		DrawPointer( Session.CurrentPointer, Theme.Yellow );
 
 		if ( Session.PreviewPointer is { } preview )
@@ -147,7 +148,7 @@ public class ScrubberWidget : Widget
 		}
 	}
 
-	private void DrawPointer( float time, Color color )
+	public void DrawPointer( float time, Color color )
 	{
 		var pos = ToPixels( time );
 		Paint.SetBrushAndPen( color );

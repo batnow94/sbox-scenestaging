@@ -6,12 +6,29 @@
 internal sealed partial class MotionEditMode : EditMode
 {
 	private TimeSelectionItem? TimeSelection { get; set; }
+	public KeyframeInterpolation DefaultInterpolation { get; private set; } = KeyframeInterpolation.QuadraticInOut;
 
 	private float? _selectionStartTime;
 
 	protected override void OnEnable()
 	{
+		Toolbar.AddSpacingCell();
 
+		foreach ( var interpolation in Enum.GetValues<KeyframeInterpolation>() )
+		{
+			Toolbar.AddToggle( interpolation,
+				() => (TimeSelection?.FadeInInterpolation ?? DefaultInterpolation) == interpolation,
+				_ =>
+				{
+					DefaultInterpolation = interpolation;
+
+					if ( TimeSelection is { } timeSelection )
+					{
+						timeSelection.FadeInInterpolation = interpolation;
+						timeSelection.FadeOutInterpolation = interpolation;
+					}
+				} );
+		}
 	}
 
 	protected override void OnDisable()
@@ -42,6 +59,8 @@ internal sealed partial class MotionEditMode : EditMode
 
 			TimeSelection.Duration = TimeSelection.FadeInDuration = TimeSelection.FadeOutDuration = 0f;
 			TimeSelection.StartTime = time;
+			TimeSelection.FadeInInterpolation = DefaultInterpolation;
+			TimeSelection.FadeOutInterpolation = DefaultInterpolation;
 
 			_selectionStartTime = time;
 
@@ -87,5 +106,10 @@ internal sealed partial class MotionEditMode : EditMode
 			selection.FadeInDuration += delta;
 			selection.FadeOutDuration += delta;
 		}
+	}
+
+	protected override void OnScrubberPaint( ScrubberWidget scrubber )
+	{
+		TimeSelection?.ScrubberPaint( scrubber );
 	}
 }
