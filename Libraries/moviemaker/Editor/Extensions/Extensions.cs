@@ -16,6 +16,14 @@ internal static class Extensions
 	}
 
 	/// <summary>
+	/// A bookmark shape, pointing up. Reminds me of those things you move for snooker scores
+	/// </summary>
+	public static void PaintBookmarkUp( float x, float top, float width, float arrowheight, float totalheight )
+	{
+		Paint.DrawPolygon( new Vector2( x, top ), new Vector2( x + width, top + arrowheight ), new Vector2( x + width, top + totalheight ), new Vector2( x - width, top + totalheight ), new Vector2( x - width, top + arrowheight ) );
+	}
+
+	/// <summary>
 	/// A triangle shape
 	/// </summary>
 	public static void PaintTriangle( Vector2 center, Vector2 size )

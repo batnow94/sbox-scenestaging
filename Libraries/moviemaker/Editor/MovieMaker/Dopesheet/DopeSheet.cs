@@ -138,7 +138,7 @@ public class DopeSheet : GraphicsView
 
 		// Scrub bar position depends on width of track headers
 
-		tracklist.Editor.ScrubBar.Update();
+		tracklist.Editor.UpdateScrubBars();
 	}
 
 	protected override void OnWheel( WheelEvent e )

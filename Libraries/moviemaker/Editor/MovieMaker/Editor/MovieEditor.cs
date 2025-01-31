@@ -6,7 +6,8 @@ namespace Editor.MovieMaker;
 
 public class MovieEditor : Widget
 {
-	public ScrubberWidget ScrubBar { get; private set; }
+	public ScrubberWidget ScrubBarTop { get; private set; }
+	public ScrubberWidget ScrubBarBottom { get; private set; }
 	public TrackListWidget TrackList { get; private set; }
 	public ToolbarWidget Toolbar { get; private set; }
 
@@ -43,8 +44,9 @@ public class MovieEditor : Widget
 
 		Layout?.Clear( true );
 		Toolbar = Layout.Add( new ToolbarWidget( this ) );
-		ScrubBar = Layout.Add( new ScrubberWidget( this ) );
+		ScrubBarTop = Layout.Add( new ScrubberWidget( this, true ) );
 		TrackList = Layout.Add( new TrackListWidget( this ) );
+		ScrubBarBottom = Layout.Add( new ScrubberWidget( this, false ) );
 
 		Session.SetEditMode( EditMode.DefaultType );
 	}
@@ -53,9 +55,10 @@ public class MovieEditor : Widget
 	{
 		Layout.Clear( true );
 		Session = null;
-		ScrubBar = default;
-		TrackList = default;
-		Toolbar = default;
+		ScrubBarTop = null;
+		ScrubBarBottom = null;
+		TrackList = null;
+		Toolbar = null;
 
 		CreateStartupHelper();
 	}
@@ -181,6 +184,12 @@ public class MovieEditor : Widget
 	{
 		Initialize( player );
 		contextHash = default;
+	}
+
+	public void UpdateScrubBars()
+	{
+		ScrubBarTop?.Update();
+		ScrubBarBottom?.Update();
 	}
 
 	public void CreateNew()
