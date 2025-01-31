@@ -66,7 +66,7 @@ public abstract class EditMode
 			return btn;
 		}
 
-		public void AddSeparator() => toolbar.AddSeparator();
+		public void AddSpacingCell() => toolbar.AddSpacingCell( 16f );
 	}
 
 	protected Session Session { get; private set; } = null!;

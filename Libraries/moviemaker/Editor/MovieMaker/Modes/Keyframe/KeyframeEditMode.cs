@@ -47,7 +47,7 @@ internal sealed class KeyframeEditMode : EditMode
 
 		btn.ForegroundActive = Theme.Red;
 
-		Toolbar.AddSeparator();
+		Toolbar.AddSpacingCell();
 
 		foreach ( var interpolation in Enum.GetValues<KeyframeInterpolation>() )
 		{
