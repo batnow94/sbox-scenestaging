@@ -89,15 +89,27 @@ public abstract class EditMode
 
 	protected virtual void OnDisable() { }
 
-	internal bool PreChange( MovieTrack track ) => OnPreChange(
-		TrackList.Tracks.First( x => x.Track == track ).Channel
-		?? throw new Exception( "Track GraphicsItem not created!" ) );
+	internal bool PreChange( MovieTrack track )
+	{
+		if ( TrackList.Tracks.FirstOrDefault( x => x.Track == track )?.Channel is { } channel )
+		{
+			return OnPreChange( channel );
+		}
+
+		return false;
+	}
 
 	protected virtual bool OnPreChange( DopeSheetTrack track ) => false;
 
-	internal bool PostChange( MovieTrack track ) => OnPostChange(
-		TrackList.Tracks.First( x => x.Track == track ).Channel
-		?? throw new Exception( "Track GraphicsItem not created!" ) );
+	internal bool PostChange( MovieTrack track )
+	{
+		if ( TrackList.Tracks.FirstOrDefault( x => x.Track == track )?.Channel is { } channel )
+		{
+			return OnPostChange( channel );
+		}
+
+		return false;
+	}
 
 	protected virtual bool OnPostChange( DopeSheetTrack track ) => false;
 

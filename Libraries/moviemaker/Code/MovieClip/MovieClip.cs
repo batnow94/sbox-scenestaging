@@ -17,6 +17,8 @@ public sealed partial class MovieClip
 	private readonly List<MovieTrack> _rootTracks = new();
 	private readonly Dictionary<Guid, MovieTrack> _trackDict = new();
 
+	private int? _trackHash;
+
 	/// <summary>
 	/// Set of tracks in this clip that are at the root level in the hierarchy.
 	/// </summary>
@@ -31,6 +33,11 @@ public sealed partial class MovieClip
 	/// Total number of tracks in the clip, including children of other tracks.
 	/// </summary>
 	public int TrackCount => _trackDict.Count;
+
+	/// <summary>
+	/// Hash of the track list, as a quick way to see if any tracks have been added / removed.
+	/// </summary>
+	public int TrackHash => _trackHash ??= CalculateTrackHash();
 
 	/// <summary>
 	/// How long this clip takes to fully play, in seconds.
@@ -78,6 +85,8 @@ public sealed partial class MovieClip
 		{
 			track.Parent.AddChildInternal( track );
 		}
+
+		InvalidateTrackHash();
 	}
 
 	/// <summary>
@@ -107,6 +116,8 @@ public sealed partial class MovieClip
 		{
 			track.Parent.RemoveChildInternal( track );
 		}
+
+		InvalidateTrackHash();
 	}
 
 	private static IEnumerable<MovieTrack> EnumerateAllDescendants( MovieTrack track )
@@ -122,5 +133,22 @@ public sealed partial class MovieClip
 				yield return descendant;
 			}
 		}
+	}
+
+	private int CalculateTrackHash()
+	{
+		var hash = new HashCode();
+
+		foreach ( var track in AllTracks )
+		{
+			hash.Add( track.Id );
+		}
+
+		return hash.ToHashCode();
+	}
+
+	private void InvalidateTrackHash()
+	{
+		_trackHash = null;
 	}
 }

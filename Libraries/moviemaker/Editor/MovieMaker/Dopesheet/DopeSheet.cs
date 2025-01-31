@@ -127,11 +127,14 @@ public class DopeSheet : GraphicsView
 
 				Session.EditMode?.TrackAdded( track.Channel );
 			}
-
-			track.UpdateChannelPosition();
 		}
 
 		Update();
+
+		foreach ( var track in tracklist.Tracks )
+		{
+			track.UpdateChannelPosition();
+		}
 
 		// Scrub bar position depends on width of track headers
 

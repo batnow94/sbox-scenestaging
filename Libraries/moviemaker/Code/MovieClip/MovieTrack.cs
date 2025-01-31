@@ -39,6 +39,11 @@ public sealed partial class MovieTrack
 	public string Name { get; set; }
 
 	/// <summary>
+	/// Fully qualified name of the track including parent names, or <see cref="Name"/> if this track has no parent.
+	/// </summary>
+	public string FullName => Parent is null ? Name : $"{Parent.FullName}.{Name}";
+
+	/// <summary>
 	/// What type of property is this track controlling.
 	/// </summary>
 	public Type PropertyType { get; }
@@ -139,6 +144,11 @@ public sealed partial class MovieTrack
 	/// </summary>
 	public void Remove()
 	{
+		foreach ( var child in Children.ToArray() )
+		{
+			child.Remove();
+		}
+
 		_clip?.RemoveTrackInternal( this );
 		_clip = null;
 		_parent = null;

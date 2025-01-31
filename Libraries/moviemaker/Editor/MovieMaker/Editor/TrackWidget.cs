@@ -16,6 +16,8 @@ public class TrackWidget : Widget
 
 	RealTimeSince timeSinceInteraction = 1000;
 
+	private bool _wasVisible;
+
 	public TrackWidget( MovieTrack track, TrackListWidget list )
 	{
 		TrackList = list;
@@ -126,12 +128,21 @@ public class TrackWidget : Widget
 		Paint.SetBrushAndPen( BackgroundColor );
 		Paint.DrawRect( new Rect( LocalRect.Left, LocalRect.Top, LocalRect.Width, LocalRect.Height ), 4 );
 
+		if ( !_wasVisible )
+		{
+			// TODO: I don't know why this is needed, fixes Visible not being true when first positioning channel
+
+			_wasVisible = true;
+			UpdateChannelPosition();
+		}
+
 		if ( timeSinceInteraction < 2.0f )
 		{
 			var delta = timeSinceInteraction.Relative.Remap( 2.0f, 0, 0, 1 );
 			Paint.SetBrush( Theme.Yellow.WithAlpha( delta ) );
 			Paint.DrawRect( new Rect( LocalRect.Right - 4, LocalRect.Top, 32, LocalRect.Height ) );
 			Update();
+			return;
 		}
 	}
 

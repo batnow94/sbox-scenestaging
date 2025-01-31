@@ -22,6 +22,8 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 
 	ScrollArea ScrollArea;
 
+	private int _lastTrackHash;
+
 	public TrackListWidget( MovieEditor parent ) : base( parent )
 	{
 		Session = parent.Session;
@@ -102,38 +104,37 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		TrackList.Clear( true );
 		Tracks.Clear();
 
-		var groups = new Dictionary<MovieTrack, TrackGroup>();
-
-		foreach ( var track in Session.Clip.AllTracks )
+		if ( Session.Clip is { } clip )
 		{
-			var editorTrack = AddTrack( track );
+			_lastTrackHash = clip.TrackHash;
 
-			var parentGroup = track.Parent is null ? null : groups.GetValueOrDefault( track.Parent );
+			var groups = new Dictionary<MovieTrack, TrackGroup>();
 
-			if ( track.Children.Count == 0 )
+			foreach ( var track in clip.AllTracks )
 			{
-				(parentGroup?.Content ?? TrackList).Add( editorTrack );
-				continue;
+				var editorTrack = AddTrack( track );
+
+				var parentGroup = track.Parent is null ? null : groups.GetValueOrDefault( track.Parent );
+
+				if ( track.Children.Count == 0 )
+				{
+					(parentGroup?.Content ?? TrackList).Add( editorTrack );
+					continue;
+				}
+
+				var group = new TrackGroup( editorTrack );
+
+				groups[track] = group;
+
+				(parentGroup?.Content ?? TrackList).Add( group );
 			}
-
-			var group = new TrackGroup( editorTrack );
-
-			groups[track] = group;
-
-			(parentGroup?.Content ?? TrackList).Add( group );
+		}
+		else
+		{
+			_lastTrackHash = 0;
 		}
 
 		DopeSheet.UpdateTracks();
-	}
-
-	private static MovieTrack GetRoot( MovieTrack track )
-	{
-		while ( track.Parent is { } parent )
-		{
-			track = parent;
-		}
-
-		return track;
 	}
 
 	/// <summary>
@@ -141,8 +142,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 	/// </summary>
 	public void RebuildTracksIfNeeded()
 	{
-		if ( Tracks.Count == Session.Clip.TrackCount )
-			return;
+		if ( (Session.Clip?.TrackHash ?? 0) == _lastTrackHash ) return;
 
 		RebuildTracks();
 	}
