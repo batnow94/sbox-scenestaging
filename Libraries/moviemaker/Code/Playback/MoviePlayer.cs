@@ -89,7 +89,8 @@ public sealed partial class MoviePlayer : Component
 	public void ApplyFrame( float time )
 	{
 		if ( MovieClip is null || _sceneRefMap.Count == 0 ) return;
-		if ( time < 0f || time > MovieClip.Duration ) return;
+
+		time = Math.Clamp( time, 0f, MovieClip.Duration );
 
 		using var sceneScope = Scene.Push();
 

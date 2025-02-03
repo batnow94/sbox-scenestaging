@@ -24,7 +24,7 @@ file sealed class KeyframeCurveConverter : JsonConverterFactory
 
 	private class Converter<T> : JsonConverter<KeyframeCurve<T>>
 	{
-		private record Model( KeyframeInterpolation Interpolation, IReadOnlyList<Keyframe<T>> Keyframes );
+		private record Model( InterpolationMode Interpolation, IReadOnlyList<Keyframe<T>> Keyframes );
 
 		public override KeyframeCurve<T> Read( ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options )
 		{

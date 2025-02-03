@@ -6,7 +6,7 @@ namespace Editor.MovieMaker;
 
 #nullable enable
 
-partial class KeyframeExtensions
+public static class KeyframeExtensions
 {
 	public const float DefaultSampleRate = 30f;
 
@@ -54,7 +54,7 @@ partial class KeyframeExtensions
 				samples[i] = keyframes.GetValue( t );
 			}
 
-			var data = new SamplesData<T>( sampleRate, InterpolationMode.Linear, samples );
+			var data = new SamplesData<T>( sampleRate, SampleInterpolationMode.Linear, samples );
 
 			if ( track.Blocks.Count != 1 )
 			{

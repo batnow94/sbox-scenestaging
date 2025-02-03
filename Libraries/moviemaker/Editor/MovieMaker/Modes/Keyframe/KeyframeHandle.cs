@@ -15,7 +15,7 @@ internal class KeyframeHandle : GraphicsItem
 	public float Time { get; set; }
 	public object? Value { get; set; }
 
-	public KeyframeInterpolation Interpolation { get; set; }
+	public InterpolationMode Interpolation { get; set; }
 
 	public KeyframeHandle( TrackKeyframes keyframes ) : base( keyframes.DopeSheetTrack )
 	{

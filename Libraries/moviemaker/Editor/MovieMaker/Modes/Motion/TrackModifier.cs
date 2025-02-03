@@ -24,12 +24,12 @@ internal abstract class TrackModifier
 		return Cache[type] = (TrackModifier)Activator.CreateInstance( typeof(TrackModifier<>).MakeGenericType( type ) )!;
 	}
 
-	public abstract MovieBlockData Modify( MovieBlock block, MovieBlockData data, TimeSelection selection, object? value );
+	public abstract MovieBlockData Modify( MovieBlock block, MovieBlockData data, TimeSelection selection, object? value, bool additive );
 }
 
 internal sealed class TrackModifier<T> : TrackModifier
 {
-	public override MovieBlockData Modify( MovieBlock block, MovieBlockData data, TimeSelection selection, object? value )
+	public override MovieBlockData Modify( MovieBlock block, MovieBlockData data, TimeSelection selection, object? value, bool additive )
 	{
 		Assert.AreEqual( typeof(T), block.Track.PropertyType );
 
@@ -37,14 +37,15 @@ internal sealed class TrackModifier<T> : TrackModifier
 		{
 			// TODO
 			IConstantData => data,
-			SamplesData<T> samples => ModifySamples( block, samples, selection, (T) value! ),
+			SamplesData<T> samples => ModifySamples( block, samples, selection, (T) value!, additive ),
 			_ => data
 		};
 	}
 
-	private MovieBlockData ModifySamples( MovieBlock block, SamplesData<T> data, TimeSelection selection, T value )
+	private MovieBlockData ModifySamples( MovieBlock block, SamplesData<T> data, TimeSelection selection, T value, bool additive )
 	{
 		var interpolator = Interpolator.GetDefault<T>();
+		var transformer = additive ? LocalTransformer.GetDefault<T>() : null;
 
 		// Skip if time selection doesn't overlap this block
 
@@ -63,9 +64,12 @@ internal sealed class TrackModifier<T> : TrackModifier
 			var tLocal = i * dt;
 			var fade = selection.GetFadeValue( block.StartTime + tLocal );
 
+			var src = srcValues[i];
+			var dst = transformer is not null ? transformer.ToGlobal( value, src ) : value;
+
 			dstValues[i] = interpolator is null
-				? fade >= 1f ? value : srcValues[i]
-				: interpolator.Interpolate( srcValues[i], value, fade );
+				? fade >= 1f ? dst : src
+				: interpolator.Interpolate( src, dst, fade );
 		}
 
 		return new SamplesData<T>( data.SampleRate, data.Interpolation, dstValues );

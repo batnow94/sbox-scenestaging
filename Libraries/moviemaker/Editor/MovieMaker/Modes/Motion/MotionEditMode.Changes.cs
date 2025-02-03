@@ -34,6 +34,8 @@ partial class MotionEditMode
 			}
 		}
 
+		public bool IsAdditive { get; set; }
+
 		public bool HasChanges { get; private set; }
 
 		public TrackModifier? Modifier { get; }
@@ -47,6 +49,44 @@ partial class MotionEditMode
 				x => x.Data );
 
 			Modifier = TrackModifier.Get( track.PropertyType );
+		}
+
+		private bool TryGetOriginalValue( float time, out object? value )
+		{
+			if ( Track.GetBlock( time ) is not { } block )
+			{
+				value = null;
+				return false;
+			}
+
+			var blockData = Before.TryGetValue( block.Id, out var before )
+				? before
+				: block.Data;
+
+			switch ( blockData )
+			{
+				case IConstantData constant:
+					value = constant.Value;
+					return true;
+
+				case ISamplesData samples:
+					value = samples.GetValue( time - block.StartTime );
+					return true;
+			}
+
+			value = null;
+			return false;
+		}
+
+		public bool TryGetLocalValue( float time, object? globalValue, out object? localValue )
+		{
+			localValue = null;
+
+			if ( LocalTransformer.GetDefault( Track.PropertyType ) is not { } transformer ) return false;
+			if ( !TryGetOriginalValue( time, out var relativeTo ) ) return false;
+
+			localValue = transformer.ToLocal( globalValue, relativeTo );
+			return true;
 		}
 
 		public bool Update( TimeSelection selection )
@@ -72,7 +112,7 @@ partial class MotionEditMode
 					continue;
 				}
 
-				var newData = modifier.Modify( block, data, selection, ChangedValue );
+				var newData = modifier.Modify( block, data, selection, ChangedValue, IsAdditive );
 
 				if ( ReferenceEquals( newData, data ) )
 				{
@@ -177,7 +217,19 @@ partial class MotionEditMode
 			return false;
 		}
 
-		state.ChangedValue = property.Value;
+		var globalValue = property.Value;
+
+		if ( IsAdditive && state.TryGetLocalValue( Session.CurrentPointer, globalValue, out var localValue ) )
+		{
+			state.IsAdditive = true;
+			state.ChangedValue = localValue;
+		}
+		else
+		{
+			state.IsAdditive = false;
+			state.ChangedValue = property.Value;
+		}
+
 		selection.HasChanges = true;
 
 		return state.Update( selection.Value );

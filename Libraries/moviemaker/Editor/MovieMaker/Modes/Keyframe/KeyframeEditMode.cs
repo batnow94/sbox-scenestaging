@@ -17,7 +17,7 @@ internal sealed class KeyframeEditMode : EditMode
 	/// If true, we automatically record new keyframes when properties are changed
 	/// </summary>
 	public bool KeyframeRecording { get; set; }
-	public KeyframeInterpolation DefaultInterpolation { get; private set; } = KeyframeInterpolation.QuadraticInOut;
+	public InterpolationMode DefaultInterpolation { get; private set; } = InterpolationMode.QuadraticInOut;
 
 	public override bool AllowTrackCreation => KeyframeRecording;
 
@@ -49,7 +49,7 @@ internal sealed class KeyframeEditMode : EditMode
 
 		Toolbar.AddSpacingCell();
 
-		foreach ( var interpolation in Enum.GetValues<KeyframeInterpolation>() )
+		foreach ( var interpolation in Enum.GetValues<InterpolationMode>() )
 		{
 			Toolbar.AddToggle( interpolation,
 				() => SelectedHandles.Any()
@@ -79,21 +79,21 @@ internal sealed class KeyframeEditMode : EditMode
 	}
 
 	[Shortcut( "keyframe-edit.interp-none", "0" )]
-	public void SetInterpolationNone() => SetInterpolation( KeyframeInterpolation.None );
+	public void SetInterpolationNone() => SetInterpolation( InterpolationMode.None );
 
 	[Shortcut( "keyframe-edit.interp-linear", "1" )]
-	public void SetInterpolationLinear() => SetInterpolation( KeyframeInterpolation.Linear );
+	public void SetInterpolationLinear() => SetInterpolation( InterpolationMode.Linear );
 
 	[Shortcut( "keyframe-edit.interp-in", "2" )]
-	public void SetInterpolationIn() => SetInterpolation( KeyframeInterpolation.QuadraticIn );
+	public void SetInterpolationIn() => SetInterpolation( InterpolationMode.QuadraticIn );
 
 	[Shortcut( "keyframe-edit.interp-out", "3" )]
-	public void SetInterpolationOut() => SetInterpolation( KeyframeInterpolation.QuadraticOut );
+	public void SetInterpolationOut() => SetInterpolation( InterpolationMode.QuadraticOut );
 
 	[Shortcut( "keyframe-edit.interp-in-out", "4" )]
-	public void SetInterpolationInOut() => SetInterpolation( KeyframeInterpolation.QuadraticInOut );
+	public void SetInterpolationInOut() => SetInterpolation( InterpolationMode.QuadraticInOut );
 
-	public void SetInterpolation( KeyframeInterpolation value )
+	public void SetInterpolation( InterpolationMode value )
 	{
 		DefaultInterpolation = value;
 
@@ -127,7 +127,7 @@ internal sealed class KeyframeEditMode : EditMode
 		WriteTracks( SelectedTracks );
 	}
 
-	private record struct CopiedHandle( Guid Track, float Time, object? Value, KeyframeInterpolation Interpolation );
+	private record struct CopiedHandle( Guid Track, float Time, object? Value, InterpolationMode Interpolation );
 	private static List<CopiedHandle>? Copied { get; set; }
 
 	protected override void OnCopy()
@@ -280,14 +280,14 @@ internal sealed class TrackKeyframes : IDisposable
 
 	internal bool UpdateKey( float time ) => UpdateKey( time, TrackWidget.Property!.Value );
 
-	internal void AddKey( float time, object? value, KeyframeInterpolation? interpolation = null )
+	internal void AddKey( float time, object? value, InterpolationMode? interpolation = null )
 	{
 		var h = FindKey( time ) ?? new KeyframeHandle( this ) { Interpolation = EditMode.DefaultInterpolation };
 
 		UpdateKey( h, time, value, interpolation );
 	}
 
-	internal bool UpdateKey( float time, object? value, KeyframeInterpolation? interpolation = null )
+	internal bool UpdateKey( float time, object? value, InterpolationMode? interpolation = null )
 	{
 		if ( FindKey( time ) is not { } h ) return false;
 
@@ -296,7 +296,7 @@ internal sealed class TrackKeyframes : IDisposable
 		return true;
 	}
 
-	private void UpdateKey( KeyframeHandle h, float time, object? value, KeyframeInterpolation? interpolation )
+	private void UpdateKey( KeyframeHandle h, float time, object? value, InterpolationMode? interpolation )
 	{
 		//EditorUtility.PlayRawSound( "sounds/editor/add.wav" );
 		h.Time = time;

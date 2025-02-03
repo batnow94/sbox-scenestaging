@@ -4,9 +4,9 @@
 
 public class InterpolationButton : IconButton
 {
-	public KeyframeInterpolation Value { get; }
+	public InterpolationMode Value { get; }
 
-	public InterpolationButton( KeyframeInterpolation value, Action? onClick = null, Widget? parent = null )
+	public InterpolationButton( InterpolationMode value, Action? onClick = null, Widget? parent = null )
 		: base( "", onClick, parent )
 	{
 		Value = value;

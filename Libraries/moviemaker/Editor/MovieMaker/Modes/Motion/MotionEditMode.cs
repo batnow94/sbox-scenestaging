@@ -8,7 +8,9 @@ namespace Editor.MovieMaker;
 internal sealed partial class MotionEditMode : EditMode
 {
 	private TimeSelectionItem? TimeSelection { get; set; }
-	public KeyframeInterpolation DefaultInterpolation { get; private set; } = KeyframeInterpolation.QuadraticInOut;
+	public InterpolationMode DefaultInterpolation { get; private set; } = InterpolationMode.QuadraticInOut;
+
+	public bool IsAdditive { get; private set; }
 
 	private float? _selectionStartTime;
 
@@ -16,7 +18,7 @@ internal sealed partial class MotionEditMode : EditMode
 	{
 		Toolbar.AddSpacingCell();
 
-		foreach ( var interpolation in Enum.GetValues<KeyframeInterpolation>() )
+		foreach ( var interpolation in Enum.GetValues<InterpolationMode>() )
 		{
 			Toolbar.AddToggle( interpolation,
 				() => (TimeSelection?.Value.Start?.Interpolation ?? DefaultInterpolation) == interpolation,
@@ -31,6 +33,9 @@ internal sealed partial class MotionEditMode : EditMode
 					}
 				} );
 		}
+
+		Toolbar.AddSpacingCell();
+		Toolbar.AddToggle( "Additive", "layers", () => IsAdditive, state => IsAdditive = state );
 	}
 
 	private void ClearSelection()

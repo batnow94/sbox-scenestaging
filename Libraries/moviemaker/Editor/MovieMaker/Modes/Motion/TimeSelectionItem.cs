@@ -3,7 +3,7 @@ using Sandbox;
 
 namespace Editor.MovieMaker;
 
-internal record struct FadeTime( float PeakTime, float Duration, KeyframeInterpolation Interpolation );
+internal record struct FadeTime( float PeakTime, float Duration, InterpolationMode Interpolation );
 
 internal record struct TimeSelection( FadeTime? Start, FadeTime? End )
 {
@@ -14,14 +14,14 @@ internal record struct TimeSelection( FadeTime? Start, FadeTime? End )
 			End is { } end ? end with { PeakTime = Math.Min( maxTime, end.PeakTime ) } : null );
 	}
 
-	public TimeSelection WithInterpolation( KeyframeInterpolation interpolation )
+	public TimeSelection WithInterpolation( InterpolationMode interpolation )
 	{
 		return new TimeSelection(
 			Start is { } start ? start with { Interpolation = interpolation } : null,
 			End is { } end ? end with { Interpolation = interpolation } : null );
 	}
 
-	public TimeSelection WithTimeRange( float min, float max, KeyframeInterpolation defaultInterpolation )
+	public TimeSelection WithTimeRange( float min, float max, InterpolationMode defaultInterpolation )
 	{
 		if ( min > max )
 		{
@@ -242,7 +242,7 @@ partial class MotionEditMode
 			Paint.DrawLine( new Vector2( x2, 0f ), new Vector2( x2, LocalRect.Height ) );
 		}
 
-		private void AddCurve( List<Vector2> points, Vector2 origin, Vector2 delta, KeyframeInterpolation interpolation, bool flip )
+		private void AddCurve( List<Vector2> points, Vector2 origin, Vector2 delta, InterpolationMode interpolation, bool flip )
 		{
 			const int steps = 16;
 

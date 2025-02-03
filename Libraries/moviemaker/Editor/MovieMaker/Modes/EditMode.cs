@@ -46,9 +46,9 @@ public abstract class EditMode
 			return btn;
 		}
 
-		public IconButton AddToggle( KeyframeInterpolation value, Func<bool> getState, Action<bool> setState )
+		public IconButton AddToggle( InterpolationMode value, Func<bool> getState, Action<bool> setState )
 		{
-			var entry = EditorTypeLibrary.GetEnumDescription( typeof(KeyframeInterpolation) )
+			var entry = EditorTypeLibrary.GetEnumDescription( typeof(InterpolationMode) )
 				.FirstOrDefault( x => x.IntegerValue == (long)value );
 
 			var btn = new InterpolationButton( value )

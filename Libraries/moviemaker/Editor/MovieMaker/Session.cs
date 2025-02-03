@@ -39,6 +39,8 @@ public sealed class Session
 	SmoothDeltaFloat SmoothZoom = new SmoothDeltaFloat { Value = 100.0f, Target = 100.0f, SmoothTime = 0.3f };
 	SmoothDeltaFloat SmoothPan = new SmoothDeltaFloat { Value = 0.0f, Target = 0f, SmoothTime = 0.3f };
 
+	private float? _lastPlayerPosition;
+
 	/// <summary>
 	/// Invoked when the view pans or changes scale.
 	/// </summary>
@@ -99,8 +101,8 @@ public sealed class Session
 		ViewChanged?.Invoke();
 	}
 
-	public event Action<float> PointerChanged;
-	public event Action<float?> PreviewChanged;
+	public event Action<float>? PointerChanged;
+	public event Action<float?>? PreviewChanged;
 
 	public void SetCurrentPointer( float time )
 	{
@@ -145,6 +147,14 @@ public sealed class Session
 
 	public bool Frame()
 	{
+		if ( !Playing && _lastPlayerPosition is { } lastPlayerPosition && !lastPlayerPosition.AlmostEqual( Player.Position ) )
+		{
+			CurrentPointer = lastPlayerPosition;
+			PointerChanged?.Invoke( CurrentPointer );
+		}
+
+		_lastPlayerPosition = Player.Position;
+
 		if ( Playing )
 		{
 			var targetTime = CurrentPointer + RealTime.Delta;

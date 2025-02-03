@@ -11,20 +11,20 @@ public interface IKeyframe
 {
 	float Time { get; }
 	object? Value { get; }
-	KeyframeInterpolation? Interpolation { get; }
+	InterpolationMode? Interpolation { get; }
 }
 
 public record struct Keyframe<T>(
 	float Time, T Value,
 	[property: JsonIgnore( Condition = JsonIgnoreCondition.WhenWritingNull )]
-	KeyframeInterpolation? Interpolation ) : IKeyframe
+	InterpolationMode? Interpolation ) : IKeyframe
 {
 	object? IKeyframe.Value => Value;
 }
 
 public abstract partial class KeyframeCurve : IEnumerable<IKeyframe>
 {
-	public KeyframeInterpolation Interpolation { get; set; }
+	public InterpolationMode Interpolation { get; set; }
 
 	public abstract Type ValueType { get; }
 	public abstract int Count { get; }
@@ -41,7 +41,7 @@ public abstract partial class KeyframeCurve : IEnumerable<IKeyframe>
 
 	public abstract void Clear();
 
-	public abstract void SetKeyframe( float time, object? value, KeyframeInterpolation? interpolation = null );
+	public abstract void SetKeyframe( float time, object? value, InterpolationMode? interpolation = null );
 	public object GetValue( float time ) => OnGetValue( time );
 
 	protected abstract object OnGetValue( float time );
@@ -69,8 +69,8 @@ public partial class KeyframeCurve<T> : KeyframeCurve, IEnumerable<Keyframe<T>>
 	public KeyframeCurve()
 	{
 		Interpolation = _interpolator is not null
-			? KeyframeInterpolation.QuadraticInOut
-			: KeyframeInterpolation.None;
+			? InterpolationMode.QuadraticInOut
+			: InterpolationMode.None;
 	}
 
 	public Keyframe<T> this[ int index ]
@@ -79,10 +79,10 @@ public partial class KeyframeCurve<T> : KeyframeCurve, IEnumerable<Keyframe<T>>
 		set => _keyframes.Values[index] = value;
 	}
 
-	public override void SetKeyframe( float time, object? value, KeyframeInterpolation? interpolation = null ) =>
+	public override void SetKeyframe( float time, object? value, InterpolationMode? interpolation = null ) =>
 		SetKeyframe( new Keyframe<T>( time, (T)value!, interpolation ) );
 
-	public void SetKeyframe( float time, T value, KeyframeInterpolation? interpolation = null ) =>
+	public void SetKeyframe( float time, T value, InterpolationMode? interpolation = null ) =>
 		SetKeyframe( new Keyframe<T>( time, value, interpolation ) );
 
 	public void SetKeyframe( Keyframe<T> keyframe )

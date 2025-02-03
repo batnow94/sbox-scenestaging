@@ -9,7 +9,7 @@ namespace Sandbox.MovieMaker;
 /// <summary>
 /// How to interpret values measured between samples in a <see cref="SamplesData{T}"/>.
 /// </summary>
-public enum InterpolationMode
+public enum SampleInterpolationMode
 {
 	/// <summary>
 	/// Use the previous value.
@@ -41,7 +41,7 @@ public interface ISamplesData
 	/// <summary>
 	/// How to interpret values measured between samples.
 	/// </summary>
-	InterpolationMode Interpolation { get; }
+	SampleInterpolationMode Interpolation { get; }
 
 	/// <summary>
 	/// Raw sample values.
@@ -69,11 +69,11 @@ public interface ISamplesData
 /// <param name="Samples">Array of raw sample values.</param>
 public sealed record SamplesData<T>(
 	float SampleRate,
-	InterpolationMode Interpolation,
+	SampleInterpolationMode Interpolation,
 	IReadOnlyList<T> Samples )
 	: MovieBlockData, ISamplesData
 {
-	private readonly IInterpolator<T>? _interpolator = Interpolation is not InterpolationMode.None ? Interpolator.GetDefault<T>() : null;
+	private readonly IInterpolator<T>? _interpolator = Interpolation is not SampleInterpolationMode.None ? Interpolator.GetDefault<T>() : null;
 
 	/// <summary>
 	/// Total duration of the sampled signal.
@@ -117,9 +117,9 @@ public sealed record SamplesData<T>(
 
 internal static class SamplesExtensions
 {
-	public static float Apply( this InterpolationMode mode, float t ) => mode switch
+	public static float Apply( this SampleInterpolationMode mode, float t ) => mode switch
 	{
-		InterpolationMode.Linear => t,
+		SampleInterpolationMode.Linear => t,
 		_ => 0f
 	};
 }

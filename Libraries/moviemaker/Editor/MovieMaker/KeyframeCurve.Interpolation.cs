@@ -2,23 +2,7 @@
 
 namespace Editor.MovieMaker;
 
-public enum KeyframeInterpolation
-{
-	[Title( "None" )]
-	None,
-
-	[Title( "Linear" )]
-	Linear,
-
-	[Title( "Ease In" )]
-	QuadraticIn,
-
-	[Title( "Ease Out" )]
-	QuadraticOut,
-
-	[Title( "Ease In Out" )]
-	QuadraticInOut
-}
+#nullable enable
 
 partial class KeyframeCurve<T>
 {
@@ -62,16 +46,4 @@ partial class KeyframeCurve<T>
 
 		return interpolator.Interpolate( prev.Value, next.Value, eased );
 	}
-}
-
-public static partial class KeyframeExtensions
-{
-	public static float Apply( this KeyframeInterpolation interpolation, float t ) => interpolation switch
-	{
-		KeyframeInterpolation.Linear => t,
-		KeyframeInterpolation.QuadraticIn => Easing.QuadraticIn( t ),
-		KeyframeInterpolation.QuadraticOut => Easing.QuadraticOut( t ),
-		KeyframeInterpolation.QuadraticInOut => Easing.QuadraticInOut( t ),
-		_ => 0f
-	};
 }
