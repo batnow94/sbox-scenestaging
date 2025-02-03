@@ -20,7 +20,7 @@ public sealed class Session
 	public bool Playing { get; set; }
 	public bool Loop { get; set; } = true;
 	public float TimeOffset { get; private set; }
-	public float TimeVisible { get; private set; } = 100.0f;
+	public float PixelsPerSecond { get; private set; } = 100.0f;
 
 	/// <summary>
 	/// When editing keyframes, what time are we changing.
@@ -64,7 +64,7 @@ public sealed class Session
 
 	public float PixelsToTime( float pixels, bool snap = false )
 	{
-		var t = pixels / TimeVisible;
+		var t = pixels / PixelsPerSecond;
 
 		if ( snap )
 		{
@@ -76,7 +76,7 @@ public sealed class Session
 
 	public float TimeToPixels( float time )
 	{
-		return time * TimeVisible;
+		return time * PixelsPerSecond;
 	}
 
 	public void ScrollBy( float x, bool smooth )
@@ -171,8 +171,8 @@ public sealed class Session
 		{
 			var d = TimeToPixels( TimeOffset ) - TimeToPixels( CurrentPointer );
 
-			TimeVisible = SmoothZoom.Value;
-			TimeVisible = TimeVisible.Clamp( 5, 1024 );
+			PixelsPerSecond = SmoothZoom.Value;
+			PixelsPerSecond = PixelsPerSecond.Clamp( 5, 1024 );
 
 			var nd = TimeToPixels( TimeOffset ) - TimeToPixels( CurrentPointer );
 			ScrollBy( nd - d, false );

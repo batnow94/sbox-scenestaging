@@ -60,7 +60,7 @@ public class DopeSheet : GraphicsView
 	[EditorEvent.Frame]
 	public void Frame()
 	{
-		var state = HashCode.Combine( Session.TimeVisible, Session.TimeOffset );
+		var state = HashCode.Combine( Session.PixelsPerSecond, Session.TimeOffset );
 
 		if ( state != lastState )
 		{
@@ -122,12 +122,12 @@ public class DopeSheet : GraphicsView
 		{
 			if ( track.Property is ISceneReferenceMovieProperty ) continue;
 
-			if ( track.Channel is null )
+			if ( track.DopeSheetTrack is null )
 			{
-				track.Channel = new DopeSheetTrack( track );
-				Add( track.Channel );
+				track.DopeSheetTrack = new DopeSheetTrack( track );
+				Add( track.DopeSheetTrack );
 
-				Session.EditMode?.TrackAdded( track.Channel );
+				Session.EditMode?.TrackAdded( track.DopeSheetTrack );
 			}
 		}
 

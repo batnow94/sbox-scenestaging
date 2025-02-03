@@ -4,17 +4,17 @@
 
 public partial class DopeSheetTrack : GraphicsItem
 {
-	public TrackWidget Track { get; }
+	public TrackWidget TrackWidget { get; }
 
 	private bool? _canCreatePreview;
 
 	private List<BlockPreview> BlockPreviews { get; } = new();
 
-	public bool Visible => Track.Visible;
+	public bool Visible => TrackWidget.Visible;
 
 	public DopeSheetTrack( TrackWidget track )
 	{
-		Track = track;
+		TrackWidget = track;
 		HoverEvents = true;
 	}
 
@@ -27,7 +27,7 @@ public partial class DopeSheetTrack : GraphicsItem
 
 		UpdateBlockPreviews();
 
-		Track.TrackList.Session.EditMode?.TrackLayout( this, r );
+		TrackWidget.TrackList.Session.EditMode?.TrackLayout( this, r );
 	}
 
 	private void ClearBlockPreviews()
@@ -44,7 +44,7 @@ public partial class DopeSheetTrack : GraphicsItem
 
 	internal void OnSelected()
 	{
-		if ( Track.Property?.GetTargetGameObject() is { } gameObject )
+		if ( TrackWidget.Property?.GetTargetGameObject() is { } gameObject )
 		{
 			SceneEditorSession.Active.Selection.Set( gameObject );
 		}
@@ -64,12 +64,12 @@ public partial class DopeSheetTrack : GraphicsItem
 	{
 		if ( Visible && _canCreatePreview is not false )
 		{
-			if ( Track.Track.Blocks.Count != BlockPreviews.Count )
+			if ( TrackWidget.MovieTrack.Blocks.Count != BlockPreviews.Count )
 			{
 				ClearBlockPreviews();
 			}
 
-			var blocks = Track.Track.Blocks;
+			var blocks = TrackWidget.MovieTrack.Blocks;
 
 			for ( var i = 0; i < blocks.Count; ++i )
 			{
@@ -87,12 +87,14 @@ public partial class DopeSheetTrack : GraphicsItem
 				}
 
 				var preview = BlockPreviews[i];
-				var duration = block.Duration ?? Track.Track.Clip.Duration - block.StartTime;
+				var duration = block.Duration ?? TrackWidget.MovieTrack.Clip.Duration - block.StartTime;
 
 				preview.Block = block;
 				preview.PrepareGeometryChange();
 				preview.Position = new Vector2( Session.Current.TimeToPixels( block.StartTime ), 0f );
 				preview.Size = new Vector2( Session.Current.TimeToPixels( duration ), LocalRect.Height );
+
+				preview.Update();
 			}
 		}
 		else

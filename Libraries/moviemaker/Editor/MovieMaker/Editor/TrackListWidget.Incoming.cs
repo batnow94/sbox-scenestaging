@@ -153,6 +153,7 @@ public partial class TrackListWidget : EditorEvent.ISceneEdited
 		Assert.NotNull( trackWidget, "Track should have been created" );
 
 		trackWidget.NoteInteraction();
+		trackWidget.DopeSheetTrack?.UpdateBlockPreviews();
 
 		ScrollArea.MakeVisible( trackWidget );
 	}

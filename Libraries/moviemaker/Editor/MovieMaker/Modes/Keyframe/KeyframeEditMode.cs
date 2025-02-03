@@ -23,7 +23,7 @@ internal sealed class KeyframeEditMode : EditMode
 
 	private TrackKeyframes? GetKeyframes( TrackWidget? track )
 	{
-		return track is not null ? GetKeyframes( track.Channel ) : null;
+		return track is not null ? GetKeyframes( track.DopeSheetTrack ) : null;
 	}
 
 	private TrackKeyframes? GetKeyframes( DopeSheetTrack? track )
@@ -136,7 +136,7 @@ internal sealed class KeyframeEditMode : EditMode
 
 		foreach ( var handle in SelectedHandles )
 		{
-			Copied.Add( new CopiedHandle( handle.Track.Track.Track.Id, handle.Time, handle.Value, handle.Interpolation ) );
+			Copied.Add( new CopiedHandle( handle.Track.TrackWidget.MovieTrack.Id, handle.Time, handle.Value, handle.Interpolation ) );
 		}
 	}
 
@@ -152,7 +152,7 @@ internal sealed class KeyframeEditMode : EditMode
 
 		foreach ( var entry in Copied )
 		{
-			var track = TrackList.Tracks.FirstOrDefault( x => x.Track.Id == entry.Track );
+			var track = TrackList.Tracks.FirstOrDefault( x => x.MovieTrack.Id == entry.Track );
 			if ( track is null || GetKeyframes( track ) is not { } keyframes ) continue;
 
 			keyframes.AddKey( entry.Time + pastePointer, entry.Value, entry.Interpolation );
@@ -197,7 +197,7 @@ internal sealed class KeyframeEditMode : EditMode
 		// When about to change a track that doesn't have any keyframes, make a keyframe at t=0
 		// with the old value.
 
-		var movieTrack = track.Track.Track;
+		var movieTrack = track.TrackWidget.MovieTrack;
 
 		if ( movieTrack.Blocks.Count > 0 )
 		{
@@ -253,12 +253,12 @@ internal sealed class TrackKeyframes : IDisposable
 	public TrackKeyframes( DopeSheetTrack track, KeyframeEditMode editMode )
 	{
 		DopeSheetTrack = track;
-		TrackWidget = track.Track;
+		TrackWidget = track.TrackWidget;
 		EditMode = editMode;
 
 		HandleColor = Theme.Grey;
 
-		if ( HandleColors.TryGetValue( track.Track.Track.PropertyType, out var color ) )
+		if ( HandleColors.TryGetValue( track.TrackWidget.MovieTrack.PropertyType, out var color ) )
 		{
 			HandleColor = color;
 		}
@@ -322,7 +322,7 @@ internal sealed class TrackKeyframes : IDisposable
 
 		if ( TrackWidget.Property?.CanHaveKeyframes() ?? false )
 		{
-			Curve = TrackWidget.Track.ReadKeyframes() ?? KeyframeCurve.Create( TrackWidget.Track.PropertyType );
+			Curve = TrackWidget.MovieTrack.ReadKeyframes() ?? KeyframeCurve.Create( TrackWidget.MovieTrack.PropertyType );
 
 			foreach ( var keyframe in Curve )
 			{
@@ -352,7 +352,7 @@ internal sealed class TrackKeyframes : IDisposable
 			Curve.SetKeyframe( handle.Time, handle.Value, handle.Interpolation );
 		}
 
-		TrackWidget.Track.WriteKeyframes( Curve );
+		TrackWidget.MovieTrack.WriteKeyframes( Curve );
 
 		Session.Current?.ClipModified();
 

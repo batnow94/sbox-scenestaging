@@ -117,7 +117,7 @@ public abstract class EditMode
 
 	internal bool PreChange( MovieTrack track )
 	{
-		if ( TrackList.Tracks.FirstOrDefault( x => x.Track == track )?.Channel is { } channel )
+		if ( TrackList.Tracks.FirstOrDefault( x => x.MovieTrack == track )?.DopeSheetTrack is { } channel )
 		{
 			return OnPreChange( channel );
 		}
@@ -129,7 +129,7 @@ public abstract class EditMode
 
 	internal bool PostChange( MovieTrack track )
 	{
-		if ( TrackList.Tracks.FirstOrDefault( x => x.Track == track )?.Channel is { } channel )
+		if ( TrackList.Tracks.FirstOrDefault( x => x.MovieTrack == track )?.DopeSheetTrack is { } channel )
 		{
 			return OnPostChange( channel );
 		}

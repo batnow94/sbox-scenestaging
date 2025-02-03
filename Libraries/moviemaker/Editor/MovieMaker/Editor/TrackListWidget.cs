@@ -95,7 +95,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 	{
 		foreach ( var track in Tracks )
 		{
-			if ( track.Channel is { } channel )
+			if ( track.DopeSheetTrack is { } channel )
 			{
 				Session.EditMode?.TrackRemoved( channel );
 			}
@@ -149,7 +149,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 
 	TrackWidget FindTrack( MovieTrack track )
 	{
-		return Tracks.FirstOrDefault( x => x.Track == track );
+		return Tracks.FirstOrDefault( x => x.MovieTrack == track );
 	}
 
 	public TrackWidget AddTrack( MovieTrack track )
@@ -179,7 +179,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 		// scoll
 		if ( e.HasShift )
 		{
-			Session.ScrollBy( -e.Delta / 10.0f * (Session.TimeVisible / 10.0f), true );
+			Session.ScrollBy( -e.Delta / 10.0f * (Session.PixelsPerSecond / 10.0f), true );
 			DopeSheet?.UpdateTracks();
 			return true;
 		}
@@ -207,7 +207,7 @@ public partial class TrackListWidget : Widget, EditorEvent.ISceneEdited
 	{
 		Paint.Antialiasing = true;
 
-		Paint.SetBrushAndPen( DopeSheet.Colors.Background );
+		Paint.SetBrushAndPen( DopeSheet.Colors.Background.WithAlpha( 0.75f ) );
 		Paint.DrawRect( LocalRect );
 	}
 

@@ -7,10 +7,10 @@ namespace Editor.MovieMaker;
 public class TrackWidget : Widget
 {
 	public TrackListWidget TrackList { get; }
-	public MovieTrack Track { get; }
+	public MovieTrack MovieTrack { get; }
 	internal IMovieProperty? Property { get; }
 
-	public DopeSheetTrack? Channel { get; set; }
+	public DopeSheetTrack? DopeSheetTrack { get; set; }
 
 	public Layout Buttons { get; }
 
@@ -21,7 +21,7 @@ public class TrackWidget : Widget
 	public TrackWidget( MovieTrack track, TrackListWidget list )
 	{
 		TrackList = list;
-		Track = track;
+		MovieTrack = track;
 		FocusMode = FocusMode.TabOrClickOrWheel;
 		VerticalSizeMode = SizeMode.CanGrow;
 
@@ -33,7 +33,7 @@ public class TrackWidget : Widget
 		Buttons.Spacing = 2f;
 		Buttons.Margin = 2f;
 
-		Property = TrackList.Session.Player.GetOrAutoResolveProperty( Track );
+		Property = TrackList.Session.Player.GetOrAutoResolveProperty( MovieTrack );
 
 		// Track might not be mapped to any property in the current scene
 
@@ -68,8 +68,8 @@ public class TrackWidget : Widget
 	{
 		base.OnDestroyed();
 
-		Channel?.Destroy();
-		Channel = default;
+		DopeSheetTrack?.Destroy();
+		DopeSheetTrack = default;
 	}
 
 	protected override void OnMouseEnter()
@@ -155,11 +155,11 @@ public class TrackWidget : Widget
 
 	public void UpdateChannelPosition()
 	{
-		if ( Channel is null ) return;
+		if ( DopeSheetTrack is null ) return;
 
-		var pos = Channel.GraphicsView.FromScreen( ScreenPosition );
+		var pos = DopeSheetTrack.GraphicsView.FromScreen( ScreenPosition );
 
-		Channel.DoLayout( new Rect( pos, Size ) );
+		DopeSheetTrack.DoLayout( new Rect( pos, Size ) );
 	}
 
 	Menu menu;
@@ -173,7 +173,7 @@ public class TrackWidget : Widget
 
 	void RemoveTrack()
 	{
-		Track.Remove();
+		MovieTrack.Remove();
 		TrackList.RebuildTracksIfNeeded();
 
 		Session.Current?.ClipModified();

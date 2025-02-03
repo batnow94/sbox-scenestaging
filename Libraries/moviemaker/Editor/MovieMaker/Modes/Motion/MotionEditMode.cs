@@ -1,4 +1,6 @@
-﻿namespace Editor.MovieMaker;
+﻿using static Editor.EditorEvent.MapEditor;
+
+namespace Editor.MovieMaker;
 
 #nullable enable
 
@@ -17,34 +19,53 @@ internal sealed partial class MotionEditMode : EditMode
 		foreach ( var interpolation in Enum.GetValues<KeyframeInterpolation>() )
 		{
 			Toolbar.AddToggle( interpolation,
-				() => (TimeSelection?.FadeInInterpolation ?? DefaultInterpolation) == interpolation,
+				() => (TimeSelection?.Value.Start?.Interpolation ?? DefaultInterpolation) == interpolation,
 				_ =>
 				{
 					DefaultInterpolation = interpolation;
 
 					if ( TimeSelection is { } timeSelection )
 					{
-						timeSelection.FadeInInterpolation = interpolation;
-						timeSelection.FadeOutInterpolation = interpolation;
+						timeSelection.Value = timeSelection.Value.WithInterpolation( interpolation );
+						SelectionChanged();
 					}
 				} );
 		}
 	}
 
-	protected override void OnDisable()
+	private void ClearSelection()
 	{
-		TimeSelection?.Destroy();
-		TimeSelection = null;
-	}
+		ClearChanges();
 
-	[Shortcut( "motion-edit.back", "ESC" )]
-	private void Back()
-	{
 		if ( TimeSelection is not null )
 		{
 			TimeSelection.Destroy();
 			TimeSelection = null;
 		}
+	}
+
+	[Shortcut( "motion-edit.clear", "ESC" )]
+	private void OnClear()
+	{
+		if ( TimeSelection is { HasChanges: true } )
+		{
+			ClearChanges();
+		}
+		else if ( TimeSelection is not null )
+		{
+			ClearSelection();
+		}
+	}
+
+	[Shortcut( "motion-edit.commit", "ENTER" )]
+	private void OnCommit()
+	{
+		CommitChanges();
+	}
+
+	protected override void OnDisable()
+	{
+		ClearSelection();
 	}
 
 	protected override void OnMousePress( MouseEvent e )
@@ -57,10 +78,11 @@ internal sealed partial class MotionEditMode : EditMode
 				DopeSheet.Add( TimeSelection );
 			}
 
-			TimeSelection.Duration = TimeSelection.FadeInDuration = TimeSelection.FadeOutDuration = 0f;
-			TimeSelection.StartTime = time;
-			TimeSelection.FadeInInterpolation = DefaultInterpolation;
-			TimeSelection.FadeOutInterpolation = DefaultInterpolation;
+			TimeSelection.Value = new TimeSelection(
+				new FadeTime( time, 0f, DefaultInterpolation ),
+				new FadeTime( time, 0f, DefaultInterpolation ) );
+
+			SelectionChanged();
 
 			_selectionStartTime = time;
 
@@ -76,21 +98,21 @@ internal sealed partial class MotionEditMode : EditMode
 			&& Session.PreviewPointer is { } time
 			&& _selectionStartTime is { } dragStartTime )
 		{
-			var start = Math.Min( time, dragStartTime );
-			var end = Math.Max( time, dragStartTime );
-
-			selection.StartTime = start;
-			selection.Duration = end - start;
+			selection.Value = selection.Value.WithTimeRange( dragStartTime, time, DefaultInterpolation );
+			SelectionChanged();
 		}
 	}
 
 	protected override void OnMouseRelease( MouseEvent e )
 	{
-		if ( _selectionStartTime is { } dragStartTIme && TimeSelection is { } selection )
+		if ( _selectionStartTime is { } dragStartTime && TimeSelection is { } selection )
 		{
 			_selectionStartTime = null;
 
-			var midTime = selection.StartTime + selection.Duration * 0.5f;
+			var startTime = selection.Value.Start?.PeakTime ?? 0f;
+			var endTime = selection.Value.End?.PeakTime ?? Session.Clip?.Duration ?? 0f;
+
+			var midTime = (startTime + endTime) * 0.5f;
 
 			Session.SetCurrentPointer( midTime );
 			Session.ClearPreviewPointer();
@@ -101,10 +123,10 @@ internal sealed partial class MotionEditMode : EditMode
 	{
 		if ( TimeSelection is { } selection && e.HasShift )
 		{
-			var delta = Math.Sign( e.Delta ) * 0.1f;
+			var delta = e.Delta * 0.1f / Session.PixelsPerSecond;
 
-			selection.FadeInDuration += delta;
-			selection.FadeOutDuration += delta;
+			selection.Value = selection.Value.WithFadeDurationDelta( delta );
+			SelectionChanged();
 		}
 	}
 
